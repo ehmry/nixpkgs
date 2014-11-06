@@ -17,6 +17,11 @@ let
     src = ./nixos-build-vms/nixos-build-vms.sh;
   };
 
+  nixos-build-tor-guest = makeProg {
+    name = "nixos-build-tor-guest";
+    src = ./nixos-build-tor-guest/nixos-build-tor-guest.sh;
+  };
+
   nixos-install = makeProg {
     name = "nixos-install";
     src = ./nixos-install.sh;
@@ -96,6 +101,7 @@ in
   config = {
     environment.systemPackages =
       [ nixos-build-vms
+        nixos-build-tor-guest
         nixos-install
         nixos-rebuild
         nixos-generate-config
