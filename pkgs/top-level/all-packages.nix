@@ -13545,6 +13545,11 @@ with pkgs;
 
   doodle = callPackage ../applications/search/doodle { };
 
+  dream = callPackage ../applications/misc/dream {
+    faac = callPackage ../development/libraries/faac { drmSupport = true; };
+    faad2 = callPackage ../development/libraries/faad2 { drmSupport = true; };
+  };
+
   droopy = callPackage ../applications/networking/droopy {
     inherit (python3Packages) wrapPython;
   };
