@@ -1798,6 +1798,10 @@ in
 
   playerctl = callPackage ../tools/audio/playerctl { };
 
+  plemora = callPackage ../servers/web-apps/plemora {
+    buildMix = beamPackages.buildMix;
+  };
+
   ps_mem = callPackage ../tools/system/ps_mem { };
 
   psstop = callPackage ../tools/system/psstop { };
