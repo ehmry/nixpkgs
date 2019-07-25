@@ -8,15 +8,19 @@
 
 buildMix rec {
   name    = "pleroma";
-  version = "1.0.0";
+  version = "1.0.1";
 
   src = fetchgit {
-    url = "https://git.pleroma.social/pleroma/pleroma/";
-    rev = "v${version}";
-    sha256 = "0bgdzbl7jd9lk7amnadpwy2fsqchz2vls3qymllgl917gn6a7r2j";
+    url = "https://git.pleroma.social/pleroma/pleroma.git/";
+    rev = "5cb37412a21420509f61027fe486ae66242f800a";
+    sha256 = "0kykmxfcf8mf8911sjn240hf49yf0jmv3x37g069km1mgwcs5djh";
+    leaveDotGit = true;
+    fetchSubmodules = false;
   };
 
-  nativeBuildInputs = [ git ]; # does not work as expected
+  nativeBuildInputs = [ git ];
+  
+  postPatch = "touch $sourceRoot/config/prod.secret.exs";
 
   meta = with lib; {
     homepage        = "https://git.pleroma.social";

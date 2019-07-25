@@ -1798,7 +1798,7 @@ in
 
   playerctl = callPackage ../tools/audio/playerctl { };
 
-  plemora = callPackage ../servers/web-apps/plemora {
+  pleroma = callPackage ../servers/web-apps/pleroma {
     buildMix = beamPackages.buildMix;
   };
 
