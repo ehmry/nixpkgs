@@ -236,4 +236,13 @@ rec {
     useLLVM = true;
   };
 
+  #
+  # Genode
+  #
+
+  x86_64-genode = {
+    config = "x86_64-unknown-genode";
+    # useLLVM = true;
+  };
+
 }

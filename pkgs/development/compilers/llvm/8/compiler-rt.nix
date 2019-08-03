@@ -11,6 +11,7 @@ stdenv.mkDerivation rec {
     "-DCOMPILER_RT_DEFAULT_TARGET_ONLY=ON"
     "-DCMAKE_C_COMPILER_TARGET=${stdenv.hostPlatform.config}"
     "-DCMAKE_ASM_COMPILER_TARGET=${stdenv.hostPlatform.config}"
+    "-DCMAKE_SOURCE_DIR=`pwd`"
   ] ++ stdenv.lib.optionals (stdenv.hostPlatform != stdenv.buildPlatform) [
     "-DCMAKE_C_FLAGS=-nodefaultlibs"
     "-DCMAKE_CXX_COMPILER_WORKS=ON"

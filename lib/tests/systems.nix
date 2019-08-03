@@ -12,12 +12,12 @@ let
     expected = lib.sort lib.lessThan y;
   };
 in with lib.systems.doubles; lib.runTests {
-  testall = mseteq all (linux ++ darwin ++ freebsd ++ openbsd ++ netbsd ++ illumos ++ wasi ++ windows ++ embedded);
+  testall = mseteq all (linux ++ darwin ++ freebsd ++ openbsd ++ netbsd ++ illumos ++ wasi ++ windows ++ genode ++ embedded);
 
   testarm = mseteq arm [ "armv5tel-linux" "armv6l-linux" "armv7l-linux" "arm-none" "armv7a-darwin" ];
   testi686 = mseteq i686 [ "i686-linux" "i686-freebsd" "i686-netbsd" "i686-openbsd" "i686-cygwin" "i686-windows" "i686-none" "i686-darwin" ];
   testmips = mseteq mips [ "mipsel-linux" ];
-  testx86_64 = mseteq x86_64 [ "x86_64-linux" "x86_64-darwin" "x86_64-freebsd" "x86_64-openbsd" "x86_64-netbsd" "x86_64-cygwin" "x86_64-solaris" "x86_64-windows" "x86_64-none" ];
+  testx86_64 = mseteq x86_64 [ "x86_64-linux" "x86_64-darwin" "x86_64-freebsd" "x86_64-openbsd" "x86_64-netbsd" "x86_64-cygwin" "x86_64-solaris" "x86_64-windows" "x86_64-genode" "x86_64-none" ];
 
   testcygwin = mseteq cygwin [ "i686-cygwin" "x86_64-cygwin" ];
   testdarwin = mseteq darwin [ "x86_64-darwin" "i686-darwin" "aarch64-darwin" "armv7a-darwin" ];
@@ -28,5 +28,6 @@ in with lib.systems.doubles; lib.runTests {
   testnetbsd = mseteq netbsd [ "i686-netbsd" "x86_64-netbsd" ];
   testopenbsd = mseteq openbsd [ "i686-openbsd" "x86_64-openbsd" ];
   testwindows = mseteq windows [ "i686-cygwin" "x86_64-cygwin" "i686-windows" "x86_64-windows" ];
+  testgenode = mseteq genode [ "x86_64-genode" ];
   testunix = mseteq unix (linux ++ darwin ++ freebsd ++ openbsd ++ netbsd ++ illumos ++ cygwin);
 }

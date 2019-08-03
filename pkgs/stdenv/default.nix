@@ -30,6 +30,8 @@ let
 
   inherit (import ./darwin args) stagesDarwin;
 
+  stagesGenode = import ./genode args;
+
   stagesCross = import ./cross args;
 
   stagesCustom = import ./custom args;
@@ -60,4 +62,5 @@ in
     "i686-cygwin" = stagesNative;
     "x86_64-cygwin" = stagesNative;
     "x86_64-freebsd" = stagesFreeBSD;
+    "x86_64-genode" = stagesGenode;
   }.${localSystem.system} or stagesNative

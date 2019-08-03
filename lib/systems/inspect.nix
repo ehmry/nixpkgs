@@ -44,6 +44,7 @@ rec {
     isCygwin       = { kernel = kernels.windows; abi = abis.cygnus; };
     isMinGW        = { kernel = kernels.windows; abi = abis.gnu; };
     isWasi         = { kernel = kernels.wasi; };
+    isGenode       = { kernel = kernels.genode; };
     isNone         = { kernel = kernels.none; };
 
     isAndroid      = [ { abi = abis.android; } { abi = abis.androideabi; } ];

@@ -9021,6 +9021,8 @@ in
 
   jython = callPackage ../development/interpreters/jython {};
 
+  genodelibc = callPackage ../development/misc/genode/libc {};
+
   gImageReader = callPackage ../applications/misc/gImageReader { };
 
   guile-cairo = callPackage ../development/guile-modules/guile-cairo { };
@@ -10947,6 +10949,7 @@ in
     else if name == "libSystem" then targetPackages.darwin.xcode
     else if name == "nblibc" then targetPackages.netbsdCross.libc
     else if name == "wasilibc" then targetPackages.wasilibc or wasilibc
+    else if name == "genodelibc" then targetPackages.genodelibc or genodelibc
     else throw "Unknown libc ${name}";
 
   libcCross = assert stdenv.targetPlatform != stdenv.buildPlatform; libcCrossChooser stdenv.targetPlatform.libc;

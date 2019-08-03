@@ -62,7 +62,8 @@ stdenv.mkDerivation rec {
     ./0001-x86-Add-a-GNU_PROPERTY_X86_ISA_1_USED-note-if-needed.patch
     ./0001-x86-Properly-merge-GNU_PROPERTY_X86_ISA_1_USED.patch
     ./0001-x86-Properly-add-X86_ISA_1_NEEDED-property.patch
-  ] ++ lib.optional stdenv.targetPlatform.isiOS ./support-ios.patch;
+  ] ++ (lib.optional stdenv.targetPlatform.isiOS ./support-ios.patch)
+    ++ (lib.optional stdenv.targetPlatform.isGenode ./genode.patch);
 
   outputs = [ "out" "info" "man" ];
 

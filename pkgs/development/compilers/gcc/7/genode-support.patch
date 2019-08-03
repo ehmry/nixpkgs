@@ -1,0 +1,40 @@
+diff --git a/config.sub b/config.sub
+index 62b82599d98..f39da337263 100755
+--- a/config.sub
++++ b/config.sub
+@@ -1409,7 +1409,7 @@ case $os in
+ 	      | -morphos* | -superux* | -rtmk* | -rtmk-nova* | -windiss* \
+ 	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
+ 	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es* \
+-	      | -onefs* | -tirtos* | -phoenix* | -fuchsia* | -redox*)
++	      | -onefs* | -tirtos* | -phoenix* | -fuchsia* | -redox* | -genode*)
+ 	# Remember, each alternative MUST END IN *, to match a version number.
+ 		;;
+ 	-qnx*)
+diff --git a/gcc/config.gcc b/gcc/config.gcc
+index 3e41aa5b764..2820844aa2e 100644
+--- a/gcc/config.gcc
++++ b/gcc/config.gcc
+@@ -1808,6 +1808,9 @@ x86_64-*-fuchsia*)
+ 	tmake_file="${tmake_file} i386/t-x86_64-elf"
+ 	tm_file="${tm_file} i386/unix.h i386/att.h elfos.h newlib-stdint.h i386/i386elf.h i386/x86-64.h fuchsia.h"
+ 	;;
++x86_64-*-genode*)
++	tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h newlib-stdint.h i386/i386elf.h i386/x86-64.h"
++	;;
+ ia64*-*-elf*)
+ 	tm_file="${tm_file} dbxelf.h elfos.h newlib-stdint.h ia64/sysv4.h ia64/elf.h"
+ 	tmake_file="ia64/t-ia64"
+diff --git a/libgcc/config.host b/libgcc/config.host
+index 8beb492b5fa..27266296bd4 100644
+--- a/libgcc/config.host
++++ b/libgcc/config.host
+@@ -586,7 +586,7 @@ i[34567]86-*-elfiamcu)
+ i[34567]86-*-elf*)
+ 	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic"
+ 	;;
+-x86_64-*-elf* | x86_64-*-rtems*)
++x86_64-*-elf* | x86_64-*-rtems* | x86_64-*-genode*)
+ 	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic"
+ 	;;
+ i[34567]86-*-dragonfly*)
