@@ -39,7 +39,7 @@ rec {
         else if final.isMsp430              then "newlib"
         else if final.isAvr                 then "avrlibc"
         else if final.isNetBSD              then "nblibc"
-        else if final.isGenode              then "musl"
+        else if final.isGenode              then "genodelibc"
         # TODO(@Ericson2314) think more about other operating systems
         else                                     "native/impure";
       extensions = {

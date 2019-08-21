@@ -1,5 +1,5 @@
 diff --git a/config.sub b/config.sub
-index 62b82599d98..f39da337263 100755
+index 62b82599d986..f39da3372633 100755
 --- a/config.sub
 +++ b/config.sub
 @@ -1409,7 +1409,7 @@ case $os in
@@ -12,29 +12,439 @@ index 62b82599d98..f39da337263 100755
  		;;
  	-qnx*)
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index 3e41aa5b764..2820844aa2e 100644
+index 3e41aa5b7648..64e365796198 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
-@@ -1808,6 +1808,9 @@ x86_64-*-fuchsia*)
+@@ -920,7 +920,7 @@ case ${target} in
+ esac
+ 
+ case ${target} in
+-aarch64*-*-elf | aarch64*-*-fuchsia* | aarch64*-*-rtems*)
++aarch64*-*-elf | aarch64*-*-fuchsia* | aarch64*-*-rtems* | aarch64*-*-genode*)
+ 	tm_file="${tm_file} dbxelf.h elfos.h newlib-stdint.h"
+ 	tm_file="${tm_file} aarch64/aarch64-elf.h aarch64/aarch64-elf-raw.h"
+ 	tmake_file="${tmake_file} aarch64/t-aarch64"
+@@ -931,6 +931,9 @@ aarch64*-*-elf | aarch64*-*-fuchsia* | aarch64*-*-rtems*)
+         aarch64-*-fuchsia*)
+                 tm_file="${tm_file} fuchsia.h"
+                 ;;
++        aarch64-*-genode*)
++                tm_file="${tm_file} genode.h aarch64/genode.h"
++                ;;
+ 	aarch64-*-rtems*)
+ 	  	tm_file="${tm_file} rtems.h aarch64/rtems.h"
+ 		;;
+@@ -1133,7 +1136,7 @@ arm*-*-phoenix*)
+ 	tmake_file="${tmake_file} arm/t-arm arm/t-bpabi arm/t-phoenix"
+ 	target_cpu_cname="arm7tdmi"
+ 	;;
+-arm*-*-eabi* | arm*-*-symbianelf* | arm*-*-rtems* | arm*-*-fuchsia*)
++arm*-*-eabi* | arm*-*-symbianelf* | arm*-*-rtems* | arm*-*-fuchsia* | arm*-*-genode*)
+ 	case ${target} in
+ 	arm*eb-*-eabi*)
+ 	  tm_defines="${tm_defines} TARGET_BIG_ENDIAN_DEFAULT=1"
+@@ -1153,6 +1156,11 @@ arm*-*-eabi* | arm*-*-symbianelf* | arm*-*-rtems* | arm*-*-fuchsia*)
+ 	  tmake_file="${tmake_file} arm/t-bpabi"
+ 	  target_cpu_cname="genericv7a"
+ 	  ;;
++	arm*-*-genode*)
++	  tm_file="${tm_file} genode.h arm/genode.h newlib-stdint.h"
++	  tmake_file="${tmake_file} arm/t-bpabi t-slibgcc"
++	  use_gcc_stdint=wrap
++	  ;;
+ 	arm*-*-rtems*)
+ 	  tm_file="${tm_file} rtems.h arm/rtems.h newlib-stdint.h"
+ 	  tmake_file="${tmake_file} arm/t-bpabi arm/t-rtems"
+@@ -1808,6 +1816,9 @@ x86_64-*-fuchsia*)
  	tmake_file="${tmake_file} i386/t-x86_64-elf"
  	tm_file="${tm_file} i386/unix.h i386/att.h elfos.h newlib-stdint.h i386/i386elf.h i386/x86-64.h fuchsia.h"
  	;;
 +x86_64-*-genode*)
-+	tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h newlib-stdint.h i386/i386elf.h i386/x86-64.h"
++	tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h newlib-stdint.h i386/i386elf.h i386/x86-64.h genode.h i386/genode-x86_64.h"
 +	;;
  ia64*-*-elf*)
  	tm_file="${tm_file} dbxelf.h elfos.h newlib-stdint.h ia64/sysv4.h ia64/elf.h"
  	tmake_file="ia64/t-ia64"
+@@ -2044,9 +2055,12 @@ riscv*-*-linux*)
+ 	# automatically detect that GAS supports it, yet we require it.
+ 	gcc_cv_initfini_array=yes
+ 	;;
+-riscv*-*-elf* | riscv*-*-rtems*)
++riscv*-*-elf* | riscv*-*-rtems* | riscv*-*-genode*)
+ 	tm_file="elfos.h newlib-stdint.h ${tm_file} riscv/elf.h"
+ 	case ${target} in
++	*-*-genode*)
++	  tm_file="${tm_file} genode.h riscv/genode.h"
++	  ;;
+ 	*-*-rtems*)
+ 	  tm_file="${tm_file} rtems.h riscv/rtems.h"
+ 	  tmake_file="${tmake_file} riscv/t-rtems"
+diff --git a/gcc/config/aarch64/genode.h b/gcc/config/aarch64/genode.h
+new file mode 100644
+index 000000000000..c43ee5ce6a5f
+--- /dev/null
++++ b/gcc/config/aarch64/genode.h
+@@ -0,0 +1,29 @@
++/* Definitions for AARCH64 based Genode systems.
++   Copyright (C) 2019 Free Software Foundation, Inc.
++
++   This file is part of GCC.
++
++   GCC is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published
++   by the Free Software Foundation; either version 3, or (at your
++   option) any later version.
++
++   GCC is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
++   License for more details.
++
++   Under Section 7 of GPL version 3, you are granted additional
++   permissions described in the GCC Runtime Library Exception, version
++   3.1, as published by the Free Software Foundation.
++
++   You should have received a copy of the GNU General Public License and
++   a copy of the GCC Runtime Library Exception along with this program;
++   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
++   <http://www.gnu.org/licenses/>.  */
++
++
++#undef LINK_SPEC
++#define LINK_SPEC \
++  "%(shared:-shared) \
++   %{!static:--eh-frame-hdr}"
+diff --git a/gcc/config/arm/genode.h b/gcc/config/arm/genode.h
+new file mode 100644
+index 000000000000..e8be0c6543a0
+--- /dev/null
++++ b/gcc/config/arm/genode.h
+@@ -0,0 +1,51 @@
++/* Definitions for Genode based ARM systems using ELF
++   Copyright (C) 2019 Free Software Foundation, Inc.
++   Contributed by Emery Hemingway <ehmry@posteo.net>
++
++   This file is part of GCC.
++
++   GCC is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published
++   by the Free Software Foundation; either version 3, or (at your
++   option) any later version.
++
++   GCC is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
++   License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with GCC; see the file COPYING3.  If not see
++   <http://www.gnu.org/licenses/>.  */
++
++#define MAX_FIXED_MODE_SIZE 64
++
++#undef SIZE_TYPE
++#define SIZE_TYPE ("long unsigned int")
++
++#undef PTRDIFF_TYPE
++#define PTRDIFF_TYPE ("long int")
++
++
++/* The 'LINK_SPEC' define comprises the rules of how the GCC frontend
++   invokes the linker. */
++#undef LINK_SPEC
++#define LINK_SPEC \
++  "%(shared:-shared) \
++   %{!static:--eh-frame-hdr}"
++
++/* Don't assume anything about the header files.
++   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=57699 */
++#define NO_IMPLICIT_EXTERN_C
++
++#undef ARM_DEFAULT_SHORT_ENUMS
++#define ARM_DEFAULT_SHORT_ENUMS 0
++
++#undef ARM_TARGET2_DWARF_FORMAT
++#define ARM_TARGET2_DWARF_FORMAT (DW_EH_PE_pcrel | DW_EH_PE_indirect)
++
++#undef HAVE_LOCAL_CPU_DETECT
++
++#undef MCPU_MTUNE_NATIVE_FUNCTIONS
++
++#define MCPU_MTUNE_NATIVE_FUNCTIONS
+diff --git a/gcc/config/genode.h b/gcc/config/genode.h
+new file mode 100644
+index 000000000000..30a270e1cd9a
+--- /dev/null
++++ b/gcc/config/genode.h
+@@ -0,0 +1,28 @@
++/* Base configuration file for all Genode targets.
++   Copyright (C) 2019 Free Software Foundation, Inc.
++
++This file is part of GCC.
++
++GCC is free software; you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation; either version 3, or (at your option)
++any later version.
++
++GCC is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with GCC; see the file COPYING3.  If not see
++<http://www.gnu.org/licenses/>.  */
++
++/* Common Genode configuration.  */
++
++#undef  TARGET_OS_CPP_BUILTINS
++#define TARGET_OS_CPP_BUILTINS()		\
++  do						\
++    {						\
++      builtin_define ("__GENODE__");		\
++    }						\
++  while (false)
+diff --git a/gcc/config/i386/genode-x86_64.h b/gcc/config/i386/genode-x86_64.h
+new file mode 100644
+index 000000000000..ace1e54db6fe
+--- /dev/null
++++ b/gcc/config/i386/genode-x86_64.h
+@@ -0,0 +1,41 @@
++/* Definitions for Intel 386 running Genode with ELF format
++   Copyright (C) 2019 Free Software Foundation, Inc.
++   Contributed by Emery Hemingway
++
++This file is part of GCC.
++
++GCC is free software; you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation; either version 3, or (at your option)
++any later version.
++
++GCC is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with GCC; see the file COPYING3.  If not see
++<http://www.gnu.org/licenses/>.  */
++
++#undef SIZE_TYPE
++#define SIZE_TYPE ("long unsigned int")
++
++#undef PTRDIFF_TYPE
++#define PTRDIFF_TYPE ("long int")
++
++
++/* The 'LINK_SPEC' macro expresses the policy of how the GCC
++   frontend invokes 'ld' on multiarch platforms. I.e., on x86,
++   we need to pass '-melf_i386' to 'ld' when building in '-m32'
++   mode. */
++#undef LINK_SPEC
++#define LINK_SPEC \
++  "%{!m32:-m elf_x86_64} \
++   %{m32:-m elf_i386} \
++   %{shared:-shared} \
++   %{!static:--eh-frame-hdr}"
++
++/* Don't assume anything about the header files.  */
++/* https://gcc.gnu.org/bugzilla/show_bug.cgi?id=57699 */
++#define NO_IMPLICIT_EXTERN_C
+diff --git a/gcc/config/riscv/genode.h b/gcc/config/riscv/genode.h
+new file mode 100644
+index 000000000000..9a233dc1ccae
+--- /dev/null
++++ b/gcc/config/riscv/genode.h
+@@ -0,0 +1,31 @@
++/* Target macros for Genode RISC-V targets.
++   Copyright (C) 2019 Free Software Foundation, Inc.
++
++This file is part of GCC.
++
++GCC is free software; you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation; either version 3, or (at your option)
++any later version.
++
++GCC is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with GCC; see the file COPYING3.  If not see
++<http://www.gnu.org/licenses/>.  */
++
++#undef SIZE_TYPE
++#define SIZE_TYPE ("long unsigned int")
++
++#undef PTRDIFF_TYPE
++#define PTRDIFF_TYPE ("long int")
++
++#undef LINK_SPEC
++#define LINK_SPEC " \
++-melf" XLEN_SPEC "lriscv \
++  %{mno-relax:--no-relax} \
++  %(shared:-shared) \
++     %{!static:--eh-frame-hdr}"
 diff --git a/libgcc/config.host b/libgcc/config.host
-index 8beb492b5fa..27266296bd4 100644
+index 8beb492b5fa1..19ed9ada8e74 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
-@@ -586,7 +586,7 @@ i[34567]86-*-elfiamcu)
- i[34567]86-*-elf*)
- 	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic"
+@@ -231,6 +231,10 @@ case ${host} in
+       ;;
+   esac
+   ;;
++*-*-genode)
++  tmake_file="$tmake_file t-crtstuff-pic t-libgcc-pic t-eh-dw2-dip"
++  extra_parts="crtbegin.o crtbeginS.o crtbeginT.o crtend.o crtendS.o"
++  ;;
+ *-*-linux* | frv-*-*linux* | *-*-kfreebsd*-gnu | *-*-gnu* | *-*-kopensolaris*-gnu)
+   tmake_file="$tmake_file t-crtstuff-pic t-libgcc-pic t-eh-dw2-dip t-slibgcc t-slibgcc-gld t-slibgcc-elf-ver t-linux"
+   extra_parts="crtbegin.o crtbeginS.o crtbeginT.o crtend.o crtendS.o"
+@@ -330,12 +334,18 @@ i[34567]86-*-mingw* | x86_64-*-mingw*)
+ esac
+ 
+ case ${host} in
+-aarch64*-*-elf | aarch64*-*-rtems*)
++aarch64*-*-elf | aarch64*-*-rtems* | aarch64*-*-genode*)
+ 	extra_parts="$extra_parts crtbegin.o crtend.o crti.o crtn.o"
+ 	extra_parts="$extra_parts crtfastmath.o"
+ 	tmake_file="${tmake_file} ${cpu_type}/t-aarch64"
+ 	tmake_file="${tmake_file} ${cpu_type}/t-softfp t-softfp t-crtfm"
+ 	md_unwind_header=aarch64/aarch64-unwind.h
++	case ${host} in
++	*-genode*)
++		tmake_file="${tmake_file} t-slibgcc-nolc-override t-genode"
++		extra_parts="$extra_parts crtbeginS.o crtbeginT.o"
++	;;
++	esac
  	;;
--x86_64-*-elf* | x86_64-*-rtems*)
-+x86_64-*-elf* | x86_64-*-rtems* | x86_64-*-genode*)
- 	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic"
+ aarch64*-*-freebsd*)
+ 	extra_parts="$extra_parts crtfastmath.o"
+@@ -421,7 +431,7 @@ arm*-*-phoenix*)
+ 	extra_parts="crtbegin.o crtend.o crti.o crtn.o"
+ 	unwind_header=config/arm/unwind-arm.h
  	;;
- i[34567]86-*-dragonfly*)
+-arm*-*-eabi* | arm*-*-symbianelf* | arm*-*-rtems*)
++arm*-*-eabi* | arm*-*-symbianelf* | arm*-*-rtems* | arm*-*-genode*)
+ 	tmake_file="${tmake_file} arm/t-arm arm/t-elf t-fixedpoint-gnu-prefix"
+ 	tm_file="$tm_file arm/bpabi-lib.h"
+ 	case ${host} in
+@@ -429,6 +439,10 @@ arm*-*-eabi* | arm*-*-symbianelf* | arm*-*-rtems*)
+ 	  tmake_file="${tmake_file} arm/t-bpabi t-crtfm"
+ 	  extra_parts="crtbegin.o crtend.o crti.o crtn.o"
+ 	  ;;
++	arm*-*-genode*)
++	  tmake_file="${tmake_file} arm/t-bpabi t-crtfm t-slibgcc-nolc-override t-genode"
++	  extra_parts="crtbegin.o crtbeginS.o crtbeginT.o crtend.o crtendS.o"
++	  ;;
+ 	arm*-*-symbianelf*)
+ 	  tmake_file="${tmake_file} arm/t-symbian t-slibgcc-nolc-override"
+ 	  tm_file="$tm_file arm/symbian-lib.h"
+@@ -605,6 +619,10 @@ x86_64-*-freebsd*)
+ 	tmake_file="${tmake_file} i386/t-freebsd i386/t-crtstuff"
+ 	md_unwind_header=i386/freebsd-unwind.h
+ 	;;
++x86_64-*-genode*)
++	tmake_file="$tmake_file t-eh-dw2-dip t-slibgcc t-slibgcc-gld t-slibgcc-elf-ver"
++	tmake_file="$tmake_file i386/t-crtstuff t-slibgcc-nolc-override t-genode"
++	;;
+ i[34567]86-*-netbsdelf*)
+ 	tmake_file="${tmake_file} i386/t-crtstuff"
+ 	;;
+@@ -1097,6 +1115,10 @@ powerpcle-*-eabi*)
+ 	tmake_file="${tmake_file} rs6000/t-ppccomm rs6000/t-crtstuff t-crtstuff-pic t-fdpbit"
+ 	extra_parts="$extra_parts crtbegin.o crtend.o crtbeginS.o crtendS.o crtbeginT.o ecrti.o ecrtn.o ncrti.o ncrtn.o"
+ 	;;
++riscv*-*-genode*)
++	tmake_file="${tmake_file} riscv/t-softfp${host_address} t-softfp riscv/t-elf riscv/t-elf${host_address} t-eh-dw2-dip t-slibgcc t-slibgcc-gld t-slibgcc-elf-ver t-slibgcc-nolc-override t-genode"
++	extra_parts="crtbegin.o crtbeginS.o crtbeginT.o crtend.o crtendS.o"
++	;;
+ riscv*-*-linux*)
+ 	tmake_file="${tmake_file} riscv/t-softfp${host_address} t-softfp riscv/t-elf riscv/t-elf${host_address}"
+ 	extra_parts="$extra_parts crtbegin.o crtend.o crti.o crtn.o crtendS.o crtbeginT.o"
+diff --git a/libgcc/config/arm/unwind-arm.h b/libgcc/config/arm/unwind-arm.h
+index 8181cb696acf..8d0c45d874b3 100644
+--- a/libgcc/config/arm/unwind-arm.h
++++ b/libgcc/config/arm/unwind-arm.h
+@@ -49,7 +49,7 @@ extern "C" {
+ 	return 0;
+ 
+ #if (defined(linux) && !defined(__uClinux__)) || defined(__NetBSD__) \
+-    || defined(__FreeBSD__)
++    || defined(__FreeBSD__ || defined(__GENODE__)
+       /* Pc-relative indirect.  */
+ #define _GLIBCXX_OVERRIDE_TTYPE_ENCODING (DW_EH_PE_pcrel | DW_EH_PE_indirect)
+       tmp += ptr;
+diff --git a/libgcc/config/t-genode b/libgcc/config/t-genode
+new file mode 100644
+index 000000000000..ad40255cf1e3
+--- /dev/null
++++ b/libgcc/config/t-genode
+@@ -0,0 +1,3 @@
++# Compile crt* with pic.
++PICFLAG = -fPIC
++CRTSTUFF_T_CFLAGS += $(PICFLAG)
+diff --git a/libgcc/config/t-libunwind-elf b/libgcc/config/t-libunwind-elf
+index 84ebff5a8d93..1b990cccf481 100644
+--- a/libgcc/config/t-libunwind-elf
++++ b/libgcc/config/t-libunwind-elf
+@@ -32,7 +32,7 @@ SHLIBUNWIND_SONAME = @shlib_base_name@.so.$(SHLIBUNWIND_SOVERSION)
+ SHLIBUNWIND_LINK = $(CC) $(LIBGCC2_CFLAGS) -shared \
+ 	-nodefaultlibs -Wl,-h,$(SHLIBUNWIND_SONAME) \
+ 	-Wl,-z,text -Wl,-z,defs -o $(SHLIB_DIR)/$(SHLIBUNWIND_SONAME).tmp \
+-	@multilib_flags@ $(SHLIB_OBJS) -lc && \
++	@multilib_flags@ $(SHLIB_OBJS) $(SHLIB_LC) && \
+ 	rm -f $(SHLIB_DIR)/$(SHLIB_SOLINK) && \
+ 	if [ -f $(SHLIB_DIR)/$(SHLIBUNWIND_SONAME) ]; then \
+ 	  mv -f $(SHLIB_DIR)/$(SHLIBUNWIND_SONAME) \
+diff --git a/libstdc++-v3/configure b/libstdc++-v3/configure
+index e1c55aa72ff5..fd3b2b7f7745 100755
+--- a/libstdc++-v3/configure
++++ b/libstdc++-v3/configure
+@@ -53349,6 +53349,11 @@ done
+ 
+     ;;
+ 
++  *-genode*)
++    SECTION_FLAGS='-ffunction-sections -fdata-sections'
++
++    ;;
++
+   *-hpux*)
+     SECTION_FLAGS='-ffunction-sections -fdata-sections'
+ 
+diff --git a/libstdc++-v3/crossconfig.m4 b/libstdc++-v3/crossconfig.m4
+index 830a00b5d2a4..deb149efecf8 100644
+--- a/libstdc++-v3/crossconfig.m4
++++ b/libstdc++-v3/crossconfig.m4
+@@ -141,6 +141,9 @@ case "${host}" in
+     AC_SUBST(SECTION_FLAGS)
+     ;;
+ 
++  *-genode*)
++    ;;
++
+   *-hpux*)
+     SECTION_FLAGS='-ffunction-sections -fdata-sections'
+     AC_SUBST(SECTION_FLAGS)
+diff --git a/libstdc++-v3/libsupc++/new_opa.cc b/libstdc++-v3/libsupc++/new_opa.cc
+index 94e79cadb0e2..481caff4b324 100644
+--- a/libstdc++-v3/libsupc++/new_opa.cc
++++ b/libstdc++-v3/libsupc++/new_opa.cc
+@@ -25,7 +25,12 @@
+ 
+ #include <bits/c++config.h>
+ #include <stdlib.h>
++#if defined(__GENODE__)
++#include <stdint-gcc.h>
++extern "C" void *malloc (std::size_t);
++#else
+ #include <stdint.h>
++#endif
+ #include <bits/exception_defines.h>
+ #include "new"
+ 

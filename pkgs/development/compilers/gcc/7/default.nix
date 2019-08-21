@@ -307,6 +307,22 @@ stdenv.mkDerivation ({
     ]
     ++ optional (targetPlatform.isAarch64) "--enable-fix-cortex-a53-843419"
     ++ optional targetPlatform.isNetBSD "--disable-libcilkrts"
+    ++ optional targetPlatform.isGenode [
+      "--disable-libgo"
+      "--disable-gotools"
+      "--disable-libssp"
+      "--disable-libquadmath"
+      "--disable-libffi"
+      "--disable-libada"
+      "--with-gnu-as"
+      "--with-gnu-ld"
+      "--disable-tls"
+      "--disable-threads"
+      "--disable-hosted-libstdcxx"
+      "--enable-shared"
+      "--enable-multiarch"
+      "--disable-sjlj-exceptions"
+      ]
   ;
 
   targetConfig = if targetPlatform != hostPlatform then targetPlatform.config else null;

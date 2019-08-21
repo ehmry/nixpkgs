@@ -9021,7 +9021,9 @@ in
 
   jython = callPackage ../development/interpreters/jython {};
 
-  genodelibc = callPackage ../development/misc/genode/libc {};
+  genodelibc = callPackage ../development/misc/genode/libc {
+    inherit (buildPackages) stdenv;
+  };
 
   gImageReader = callPackage ../applications/misc/gImageReader { };
 
