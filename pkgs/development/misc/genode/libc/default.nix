@@ -63,6 +63,8 @@ stdenv.mkDerivation (archInfo // {
   patches = "${upstream}/repos/libports/src/lib/libc/patches/*.patch";
   patchFlags = "-p0 --strip 3";
 
+  ldScriptSo = ./genode_rel.ld;
+
   libcPcIn = ./libc.pc.in;
   libcSymbols = ./libc.symbols;
 })

@@ -1,7 +1,32 @@
 source $stdenv/setup
 
 export includedir=${dev}/include
-export pkgconfigdir=${dev}/lib/pkgconfig
+export pkgconfigdir=${out}/lib/pkgconfig
+
+compileStub() {
+	local ASM_SYM_DEPENDENCY="movq \1@GOTPCREL(%rip), %rax"
+	# TODO: .long \1
+
+	sed \
+		-e "s/^\(\w\+\) D \(\w\+\)\$/.data; .global \1; .type \1,%object; .size \1,\2; \1:/p" \
+		-e "s/^\(\w\+\) V/.data; .weak \1; .type \1,%object; \1:/p" \
+		-e "s/^\(\w\+\) T/.text; .global \1; .type \1,%function; \1:/p" \
+		-e "s/^\(\w\+\) R \(\w\+\)\$/.section .rodata; .global \1; .type \1,%object; .size \1,\2; \1:/p" \
+		-e "s/^\(\w\+\) W/.text; .weak \1; .type \1,%function; \1:/p" \
+		-e "s/^\(\w\+\) B \(\w\+\)\$/.bss; .global \1; .type \1,%object; .size \1,\2; \1:/p" \
+		-e "s/^\(\w\+\) U/.text; .global \1; ${ASM_SYM_DEPENDENCY}/p" \
+		$1 > symbols.s
+
+	cc -x assembler -c symbols.s -o tmp.o
+
+	ld -o $2 \
+		-shared \
+		-T$ldScriptSo \
+		tmp.o
+
+	rm tmp.o symbols.s
+}
+
 
 # Add a prefix to the following arguments
 #
@@ -250,9 +275,10 @@ installPhase() {
 
     mkdir -p $pkgconfigdir
     substituteAll $libcPcIn $pkgconfigdir/libc.pc
-    #compileStub $libcSymbols $dev/lib/libc.lib.so
+    compileStub $libcSymbols $out/lib/libc.lib.so
+    ln -s $out/lib/libc.lib.so $out/lib/libc.so
+    ln -s $out/lib $out/lib64
 
-    mkdir -p $out
 }
 
 
