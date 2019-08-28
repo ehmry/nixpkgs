@@ -17,6 +17,36 @@ let
       lib.callPackageWith (pkgs // self) path args';
   in
   rec {
+    cbor = callNimblePackge "cbor" ./cbor { };
 
+    cligen = callNimblePackge "cligen" ./cligen { };
+
+    hmac = callNimblePackge "hmac" ./hmac { };
+
+    masterpassword = callNimblePackge "masterpassword" ./masterpassword { };
+
+    mpwc = callNimblePackge "mpwc" ./mpwc { };
+
+    nimSHA2 = callNimblePackge "nimSHA2" ./nimSHA2 { };
+
+    sha1 = callNimblePackge "sha1" ./sha1 { };
+
+    python = callNimblePackge "python" ./python { };
+
+    rocksdb = callNimblePackge "rocksdb" ./rocksdb {
+      inherit (pkgs) rocksdb; };
+
+    snappy = callNimblePackge "snappy" ./snappy {
+      inherit (pkgs) snappy; };
+
+    spry = callNimblePackge "spry" ./spry { };
+
+    spryvm = callNimblePackge "spryvm" ./spryvm { };
+
+    stew = callNimblePackge "stew" ./stew { };
+
+    tempfile = callNimblePackge "tempfile" ./tempfile { };
+
+    ui = callNimblePackge "ui" ./ui { };
   };
 in lib.fix nimblePackages

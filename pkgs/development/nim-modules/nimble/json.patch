@@ -1,8 +1,158 @@
+diff --git a/.gitignore b/.gitignore
+index 5744c47..5c629ae 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -12,6 +12,14 @@ nimcache/
+ /nimble
+ /tests/nimscript/nimscript
+ /tests/issue27/issue27
++src/nimblepkg/cli
++src/nimblepkg/packageinfo
++src/nimblepkg/packageparser
++src/nimblepkg/reversedeps
++src/nimblepkg/version
++tests/nimble-test/
++tests/packageStructure/validBinary/y
++tests/testCommand/testsFail/tests/t2
+ 
+ # Windows executables
+ *.exe
+@@ -19,4 +27,14 @@ nimcache/
+ 
+ # VCC compiler and linker artifacts
+ *.ilk
+-*.pdb
+\ No newline at end of file
++*.pdb
++
++# Editors and IDEs project files and folders
++.vscode
++
++# VCS artifacts
++*.orig
++
++# Test procedure artifacts
++tests/nimble-test/
++nimble_*.nims
+diff --git a/.travis.yml b/.travis.yml
+index 95b29c0..13b8678 100644
+--- a/.travis.yml
++++ b/.travis.yml
+@@ -6,11 +6,13 @@ language: c
+ 
+ env:
+   - BRANCH=0.19.6
+-  - BRANCH=#44cc5f6360c7ccc96c296948b2524bd2cdebf1f0
++  - BRANCH=0.20.2
++  - BRANCH=#44aadd50cfa647a759610a15967960632bf597ce
+ 
+ cache:
+   directories:
+     - "$HOME/.choosenim/toolchains/nim-0.19.6"
++    - "$HOME/.choosenim/toolchains/nim-0.20.2"
+ 
+ install:
+   - export CHOOSENIM_CHOOSE_VERSION=$BRANCH
+diff --git a/changelog.markdown b/changelog.markdown
+index c8ae9cf..a011485 100644
+--- a/changelog.markdown
++++ b/changelog.markdown
+@@ -3,6 +3,8 @@
+ 
+ # Nimble changelog
+ 
++- Fixed multiple downloads and installs of the same package (#678).
++
+ ## 0.10.2 - 03/06/2019
+ 
+ This is a small release which avoids object variant changes that are now
+diff --git a/readme.markdown b/readme.markdown
+index f246c7e..9470aa8 100644
+--- a/readme.markdown
++++ b/readme.markdown
+@@ -401,6 +401,7 @@ You can also specify multiple dependencies like so:
+ 
+ requires "nim >= 0.10.0", "foobar >= 0.1.0"
+ requires "fizzbuzz >= 1.0"
++requires "https://github.com/user/pkg#5a54b5e"
+ ```
+ 
+ Nimble currently supports installation of packages from a local directory, a
+@@ -785,6 +786,19 @@ To summarise, the steps for release are:
+ Once the new tag is in the remote repository, Nimble will be able to detect
+ the new version.
+ 
++##### Git Version Tagging
++
++Use dot separated numbers to represent the release version in the git
++tag label.  Nimble will parse these git tag labels to know which
++versions of a package are published.
++
++``` text
++v0.2.0        # 0.2.0
++v1            # 1
++v1.2.3-zuzu   # 1.2.3
++foo-1.2.3.4   # 1.2.3.4
++```
++
+ ## Publishing packages
+ 
+ Publishing packages isn't a requirement. But doing so allows people to associate
 diff --git a/src/nimble.nim b/src/nimble.nim
-index 1b01502..744da66 100644
+index 1b01502..65e86a6 100644
 --- a/src/nimble.nim
 +++ b/src/nimble.nim
-@@ -555,12 +555,22 @@ proc search(options: Options) =
+@@ -156,7 +156,8 @@ proc processDeps(pkginfo: PackageInfo, options: Options): seq[PackageInfo] =
+           "dependencies for $1@$2" % [pkginfo.name, pkginfo.specialVersion],
+           priority = HighPriority)
+ 
+-  var pkgList = getInstalledPkgsMin(options.getPkgsDir(), options)
++  var pkgList {.global.}: seq[tuple[pkginfo: PackageInfo, meta: MetaData]] = @[]
++  once: pkgList = getInstalledPkgsMin(options.getPkgsDir(), options)
+   var reverseDeps: seq[tuple[name, version: string]] = @[]
+   for dep in pkginfo.requires:
+     if dep.name == "nimrod" or dep.name == "nim":
+@@ -213,13 +214,13 @@ proc processDeps(pkginfo: PackageInfo, options: Options): seq[PackageInfo] =
+   for i in reverseDeps:
+     addRevDep(options.nimbleData, i, pkginfo)
+ 
+-proc buildFromDir(pkgInfo: PackageInfo, paths: seq[string],
+-                  args: var seq[string]) =
++proc buildFromDir(pkgInfo: PackageInfo, paths, args: seq[string]) =
+   ## Builds a package as specified by ``pkgInfo``.
+   if pkgInfo.bin.len == 0:
+     raise newException(NimbleError,
+         "Nothing to build. Did you specify a module to build using the" &
+         " `bin` key in your .nimble file?")
++  var args = args
+   let realDir = pkgInfo.getRealDir()
+   for path in paths: args.add("--path:\"" & path & "\" ")
+   for bin in pkgInfo.bin:
+@@ -244,14 +245,6 @@ proc buildFromDir(pkgInfo: PackageInfo, paths: seq[string],
+       exc.hint = hint
+       raise exc
+ 
+-proc buildFromDir(pkgInfo: PackageInfo, paths: seq[string], forRelease: bool) =
+-  var args: seq[string]
+-  if forRelease:
+-    args = @["-d:release"]
+-  else:
+-    args = @[]
+-  buildFromDir(pkgInfo, paths, args)
+-
+ proc removePkgDir(dir: string, options: Options) =
+   ## Removes files belonging to the package in ``dir``.
+   try:
+@@ -356,7 +349,7 @@ proc installFromDir(dir: string, requestedVer: VersionRange, options: Options,
+   # if the build fails then the old package will still be installed.
+   if pkgInfo.bin.len > 0:
+     let paths = result.deps.map(dep => dep.getRealDir())
+-    buildFromDir(pkgInfo, paths, true)
++    buildFromDir(pkgInfo, paths, options.action.passNimFlags & "-d:release")
+ 
+   let pkgDestDir = pkgInfo.getPkgDest(options)
+   if existsDir(pkgDestDir) and existsFile(pkgDestDir / "nimblemeta.json"):
+@@ -555,12 +548,22 @@ proc search(options: Options) =
    if needsRefresh(options):
      raise newException(NimbleError, "Please run nimble refresh.")
    let pkgList = getPackageList(options)
@@ -30,7 +180,7 @@ index 1b01502..744da66 100644
      found = true
      break forPkg
  
-@@ -577,17 +587,35 @@ proc search(options: Options) =
+@@ -577,17 +580,35 @@ proc search(options: Options) =
  
    if not found:
      display("Error", "No package found.", Error, HighPriority)
@@ -71,11 +221,107 @@ index 1b01502..744da66 100644
  proc listInstalled(options: Options) =
    var h = initOrderedTable[string, seq[string]]()
    let pkgs = getInstalledPkgsMin(options.getPkgsDir(), options)
+@@ -732,20 +753,20 @@ proc init(options: Options) =
+   display("Using", "$# for new package name" % [pkgName.escape()],
+     priority = HighPriority)
+ 
+-  # Ask for package author
++  # Determine author by running an external command
++  proc getAuthorWithCmd(cmd: string): string =
++    let (name, exitCode) = doCmdEx(cmd)
++    if exitCode == QuitSuccess and name.len > 0:
++      result = name.strip()
++      display("Using", "$# for new package author" % [result],
++        priority = HighPriority)
++
++  # Determine package author via git/hg or asking
+   proc getAuthor(): string =
+     if findExe("git") != "":
+-      let (name, exitCode) = doCmdEx("git config --global user.name")
+-      if exitCode == QuitSuccess and name.len > 0:
+-        result = name.strip()
+-        display("Using", "$# for new package author" % [result.escape()],
+-          priority = HighPriority)
++      result = getAuthorWithCmd("git config --global user.name")
+     elif findExe("hg") != "":
+-      let (name, exitCode) = doCmdEx("hg config ui.username")
+-      if exitCode == QuitSuccess and name.len > 0:
+-        result = name.strip()
+-        display("Using", "$# for new package author" % [result.escape()],
+-          priority = HighPriority)
++      result = getAuthorWithCmd("hg config ui.username")
+     if result.len == 0:
+       result = promptCustom(options, "Your name?", "Anonymous")
+   let pkgAuthor = getAuthor()
+@@ -840,7 +861,8 @@ proc uninstall(options: Options) =
+     raise newException(NimbleError,
+         "Please specify the package(s) to uninstall.")
+ 
+-  var pkgsToDelete: seq[PackageInfo] = @[]
++  var pkgsToDelete: HashSet[PackageInfo]
++  pkgsToDelete.init()
+   # Do some verification.
+   for pkgTup in options.action.packages:
+     display("Looking", "for $1 ($2)" % [pkgTup.name, $pkgTup.ver],
+@@ -851,37 +873,33 @@ proc uninstall(options: Options) =
+       raise newException(NimbleError, "Package not found")
+ 
+     display("Checking", "reverse dependencies", priority = HighPriority)
+-    var errors: seq[string] = @[]
+     for pkg in pkgList:
+       # Check whether any packages depend on the ones the user is trying to
+       # uninstall.
+       if options.uninstallRevDeps:
+         getAllRevDeps(options, pkg, pkgsToDelete)
+       else:
+-        let revDeps = getRevDeps(options, pkg)
++        let
++          revDeps = getRevDeps(options, pkg)
+         var reason = ""
+-        if revDeps.len == 1:
+-          reason = "$1 ($2) depends on it" % [revDeps[0].name, $revDeps[0].ver]
+-        else:
+-          for i in 0 ..< revDeps.len:
+-            reason.add("$1 ($2)" % [revDeps[i].name, $revDeps[i].ver])
+-            if i != revDeps.len-1:
+-              reason.add ", "
+-          reason.add " depend on it"
+-
+-        if revDeps.len > 0:
+-          errors.add("Cannot uninstall $1 ($2) because $3" %
+-                     [pkgTup.name, pkg.specialVersion, reason])
++        for revDep in revDeps:
++          if reason.len != 0: reason.add ", "
++          reason.add("$1 ($2)" % [revDep.name, revDep.version])
++        if reason.len != 0:
++          reason &= " depend" & (if revDeps.len == 1: "s" else: "") & " on it"
++
++        if len(revDeps - pkgsToDelete) > 0:
++          display("Cannot", "uninstall $1 ($2) because $3" %
++                  [pkgTup.name, pkg.specialVersion, reason], Warning, HighPriority)
+         else:
+-          pkgsToDelete.add pkg
++          pkgsToDelete.incl pkg
+ 
+-    if pkgsToDelete.len == 0:
+-      raise newException(NimbleError, "\n  " & errors.join("\n  "))
++  if pkgsToDelete.len == 0:
++    raise newException(NimbleError, "Failed uninstall - no packages selected")
+ 
+   var pkgNames = ""
+-  for i in 0 ..< pkgsToDelete.len:
+-    if i != 0: pkgNames.add ", "
+-    let pkg = pkgsToDelete[i]
++  for pkg in pkgsToDelete.items:
++    if pkgNames.len != 0: pkgNames.add ", "
+     pkgNames.add("$1 ($2)" % [pkg.name, pkg.specialVersion])
+ 
+   # Let's confirm that the user wants these packages removed.
 diff --git a/src/nimblepkg/download.nim b/src/nimblepkg/download.nim
-index f8954e9..c46889f 100644
+index f8954e9..eac0c8b 100644
 --- a/src/nimblepkg/download.nim
 +++ b/src/nimblepkg/download.nim
-@@ -1,7 +1,7 @@
+@@ -1,9 +1,11 @@
  # Copyright (C) Dominik Picheta. All rights reserved.
  # BSD License. Look at license.txt for more info.
  
@@ -83,8 +329,67 @@ index f8954e9..c46889f 100644
 +import parseutils, os, osproc, strutils, tables, pegs, uri, json
  
  import packageinfo, packageparser, version, tools, common, options, cli
++from algorithm import SortOrder, sorted
++from sequtils import toSeq, filterIt, map
  
-@@ -282,3 +282,14 @@ proc echoPackageVersions*(pkg: Package) =
+ type
+   DownloadMethod* {.pure.} = enum
+@@ -24,6 +26,7 @@ proc doCheckout(meth: DownloadMethod, downloadDir, branch: string) =
+       # clone has happened. Like in the case of git on Windows where it
+       # messes up the damn line endings.
+       doCmd("git checkout --force " & branch)
++      doCmd("git submodule update --recursive")
+   of DownloadMethod.hg:
+     cd downloadDir:
+       doCmd("hg checkout " & branch)
+@@ -102,14 +105,21 @@ proc getTagsListRemote*(url: string, meth: DownloadMethod): seq[string] =
+     # http://stackoverflow.com/questions/2039150/show-tags-for-remote-hg-repository
+     raise newException(ValueError, "Hg doesn't support remote tag querying.")
+ 
+-proc getVersionList*(tags: seq[string]): Table[Version, string] =
+-  # Returns: TTable of version -> git tag name
+-  result = initTable[Version, string]()
+-  for tag in tags:
+-    if tag != "":
+-      let i = skipUntil(tag, Digits) # skip any chars before the version
+-      # TODO: Better checking, tags can have any names. Add warnings and such.
+-      result[newVersion(tag[i .. tag.len-1])] = tag
++proc getVersionList*(tags: seq[string]): OrderedTable[Version, string] =
++  ## Return an ordered table of Version -> git tag label.  Ordering is
++  ## in descending order with the most recent version first.
++  let taggedVers: seq[tuple[ver: Version, tag: string]] =
++    tags
++      .filterIt(it != "")
++      .map(proc(s: string): tuple[ver: Version, tag: string] =
++        # skip any chars before the version
++        let i = skipUntil(s, Digits)
++        # TODO: Better checking, tags can have any
++        # names. Add warnings and such.
++        result = (newVersion(s[i .. s.len-1]), s))
++      .sorted(proc(a, b: (Version, string)): int = cmp(a[0], b[0]),
++              SortOrder.Descending)
++  result = toOrderedTable[Version, string](taggedVers)
+ 
+ proc getDownloadMethod*(meth: string): DownloadMethod =
+   case meth
+@@ -267,14 +277,8 @@ proc echoPackageVersions*(pkg: Package) =
+     try:
+       let versions = getTagsListRemote(pkg.url, downMethod).getVersionList()
+       if versions.len > 0:
+-        var vstr = ""
+-        var i = 0
+-        for v in values(versions):
+-          if i != 0:
+-            vstr.add(", ")
+-          vstr.add(v)
+-          i.inc
+-        echo("  versions:    " & vstr)
++        let sortedVersions = toSeq(values(versions))
++        echo("  versions:    " & join(sortedVersions, ", "))
+       else:
+         echo("  versions:    (No versions tagged in the remote repository)")
+     except OSError:
+@@ -282,3 +286,30 @@ proc echoPackageVersions*(pkg: Package) =
    of DownloadMethod.hg:
      echo("  versions:    (Remote tag retrieval not supported by " &
          pkg.downloadMethod & ")")
@@ -99,8 +404,205 @@ index f8954e9..c46889f 100644
 +      result.add %v
 +  of DownloadMethod.hg:
 +    discard
++
++when isMainModule:
++  # Test version sorting
++  block:
++    let data = @["v9.0.0-taeyeon", "v9.0.1-jessica", "v9.2.0-sunny",
++                 "v9.4.0-tiffany", "v9.4.2-hyoyeon"]
++    let expected = toOrderedTable[Version, string]({
++      newVersion("9.4.2-hyoyeon"): "v9.4.2-hyoyeon",
++      newVersion("9.4.0-tiffany"): "v9.4.0-tiffany",
++      newVersion("9.2.0-sunny"): "v9.2.0-sunny",
++      newVersion("9.0.1-jessica"): "v9.0.1-jessica",
++      newVersion("9.0.0-taeyeon"): "v9.0.0-taeyeon"
++    })
++    doAssert expected == getVersionList(data)
++
++  echo("Everything works!")
+diff --git a/src/nimblepkg/init.nim b/src/nimblepkg/init.nim
+index 0617d97..6648877 100644
+--- a/src/nimblepkg/init.nim
++++ b/src/nimblepkg/init.nim
+@@ -14,6 +14,13 @@ type
+     pkgNimDep: string
+     pkgType: string
+ 
++proc writeExampleIfNonExistent(file: string, content: string) =
++  if not existsFile(file):
++    writeFile(file, content)
++  else:
++    display("Info:", "File " & file & " already exists, did not write " &
++            "example code", priority = HighPriority)
++
+ proc createPkgStructure*(info: PkgInitInfo, pkgRoot: string) =
+   # Create source directory
+   createDirD(pkgRoot / info.pkgSrcDir)
+@@ -23,7 +30,7 @@ proc createPkgStructure*(info: PkgInitInfo, pkgRoot: string) =
+   case info.pkgType
+   of "binary":
+     let mainFile = pkgRoot / info.pkgSrcDir / info.pkgName.changeFileExt("nim")
+-    writeFile(mainFile,
++    writeExampleIfNonExistent(mainFile,
+ """
+ # This is just an example to get you started. A typical binary package
+ # uses this file as the main entry point of the application.
+@@ -35,7 +42,7 @@ when isMainModule:
+     nimbleFileOptions.add("bin           = @[\"$1\"]\n" % info.pkgName)
+   of "library":
+     let mainFile = pkgRoot / info.pkgSrcDir / info.pkgName.changeFileExt("nim")
+-    writeFile(mainFile,
++    writeExampleIfNonExistent(mainFile,
+ """
+ # This is just an example to get you started. A typical library package
+ # exports the main API in this file. Note that you cannot rename this file
+@@ -50,7 +57,7 @@ proc add*(x, y: int): int =
+     createDirD(pkgRoot / info.pkgSrcDir / info.pkgName)
+     let submodule = pkgRoot / info.pkgSrcDir / info.pkgName /
+         "submodule".addFileExt("nim")
+-    writeFile(submodule,
++    writeExampleIfNonExistent(submodule,
+ """
+ # This is just an example to get you started. Users of your library will
+ # import this file by writing ``import $1/submodule``. Feel free to rename or
+@@ -68,7 +75,7 @@ proc initSubmodule*(): Submodule =
+     )
+   of "hybrid":
+     let mainFile = pkgRoot / info.pkgSrcDir / info.pkgName.changeFileExt("nim")
+-    writeFile(mainFile,
++    writeExampleIfNonExistent(mainFile,
+ """
+ # This is just an example to get you started. A typical hybrid package
+ # uses this file as the main entry point of the application.
+@@ -83,7 +90,7 @@ when isMainModule:
+     let pkgSubDir = pkgRoot / info.pkgSrcDir / info.pkgName & "pkg"
+     createDirD(pkgSubDir)
+     let submodule = pkgSubDir / "submodule".addFileExt("nim")
+-    writeFile(submodule,
++    writeExampleIfNonExistent(submodule,
+ """
+ # This is just an example to get you started. Users of your hybrid library will
+ # import this file by writing ``import $1pkg/submodule``. Feel free to rename or
+@@ -112,7 +119,7 @@ proc getWelcomeMessage*(): string = "Hello, World!"
+     )
+ 
+     if info.pkgType == "library":
+-      writeFile(pkgTestPath / "test1".addFileExt("nim"),
++      writeExampleIfNonExistent(pkgTestPath / "test1".addFileExt("nim"),
+ """
+ # This is just an example to get you started. You may wish to put all of your
+ # tests into a single file, or separate them into multiple `test1`, `test2`
+@@ -129,7 +136,7 @@ test "can add":
+ """ % info.pkgName
+       )
+     else:
+-      writeFile(pkgTestPath / "test1".addFileExt("nim"),
++      writeExampleIfNonExistent(pkgTestPath / "test1".addFileExt("nim"),
+ """
+ # This is just an example to get you started. You may wish to put all of your
+ # tests into a single file, or separate them into multiple `test1`, `test2`
+@@ -168,7 +175,7 @@ $#
+ 
+ requires "nim >= $#"
+ """ % [
+-      info.pkgVersion.escape(), info.pkgAuthor.escape(), info.pkgDesc.escape(),
++      info.pkgVersion.escape(), info.pkgAuthor, info.pkgDesc,
+       info.pkgLicense.escape(), info.pkgSrcDir.escape(), nimbleFileOptions,
+       pkgBackend, info.pkgNimDep
+     ]
+diff --git a/src/nimblepkg/nimscriptapi.nim b/src/nimblepkg/nimscriptapi.nim
+index 0ace797..fffad4d 100644
+--- a/src/nimblepkg/nimscriptapi.nim
++++ b/src/nimblepkg/nimscriptapi.nim
+@@ -81,20 +81,19 @@ template `--`*(key: untyped) =
+ 
+ template printIfLen(varName) =
+   if varName.len != 0:
+-    iniOut &= astToStr(varName) & ": \"\"\"" & varName & "\"\"\"\n"
++    result &= astToStr(varName) & ": \"\"\"" & varName & "\"\"\"\n"
+ 
+ template printSeqIfLen(varName) =
+   if varName.len != 0:
+-    iniOut &= astToStr(varName) & ": \"" & varName.join(", ") & "\"\n"
++    result &= astToStr(varName) & ": \"" & varName.join(", ") & "\"\n"
+ 
+-proc printPkgInfo() =
++proc printPkgInfo(): string =
+   if backend.len == 0:
+     backend = "c"
+ 
+-  var
+-    iniOut = "[Package]\n"
++  result = "[Package]\n"
+   if packageName.len != 0:
+-    iniOut &= "name: \"" & packageName & "\"\n"
++    result &= "name: \"" & packageName & "\"\n"
+   printIfLen version
+   printIfLen author
+   printIfLen description
+@@ -114,14 +113,13 @@ proc printPkgInfo() =
+   printSeqIfLen afterHooks
+ 
+   if requiresData.len != 0:
+-    iniOut &= "\n[Deps]\n"
+-    iniOut &= &"requires: \"{requiresData.join(\", \")}\"\n"
+-
+-  echo iniOut
++    result &= "\n[Deps]\n"
++    result &= &"requires: \"{requiresData.join(\", \")}\"\n"
+ 
+ proc onExit*() =
+   if "printPkgInfo".normalize in commandLineParams:
+-    printPkgInfo()
++    if outFile.len != 0:
++      writeFile(outFile, printPkgInfo())
+   else:
+     var
+       output = ""
+diff --git a/src/nimblepkg/nimscriptwrapper.nim b/src/nimblepkg/nimscriptwrapper.nim
+index 39df926..10cfae8 100644
+--- a/src/nimblepkg/nimscriptwrapper.nim
++++ b/src/nimblepkg/nimscriptwrapper.nim
+@@ -21,8 +21,8 @@ const
+   internalCmd = "e"
+   nimscriptApi = staticRead("nimscriptapi.nim")
+ 
+-proc execNimscript(nimsFile, projectDir, actionName: string, options: Options,
+-  live = true): tuple[output: string, exitCode: int] =
++proc execNimscript(nimsFile, projectDir, actionName: string, options: Options):
++  tuple[output: string, exitCode: int] =
+   let
+     nimsFileCopied = projectDir / nimsFile.splitFile().name & "_" & getProcessId() & ".nims"
+     outFile = getNimbleTempDir() & ".out"
+@@ -46,13 +46,10 @@ proc execNimscript(nimsFile, projectDir, actionName: string, options: Options,
+ 
+   displayDebug("Executing " & cmd)
+ 
+-  if live:
+-    result.exitCode = execCmd(cmd)
+-    if outFile.fileExists():
+-      result.output = outFile.readFile()
+-      discard outFile.tryRemoveFile()
+-  else:
+-    result = execCmdEx(cmd, options = {poUsePath, poStdErrToStdOut})
++  result.exitCode = execCmd(cmd)
++  if outFile.fileExists():
++    result.output = outFile.readFile()
++    discard outFile.tryRemoveFile()
+ 
+ proc getNimsFile(scriptName: string, options: Options): string =
+   let
+@@ -103,7 +100,7 @@ proc getIniFile*(scriptName: string, options: Options): string =
+   if not isIniResultCached:
+     let
+       (output, exitCode) =
+-        execNimscript(nimsFile, scriptName.parentDir(), "printPkgInfo", options, live=false)
++        execNimscript(nimsFile, scriptName.parentDir(), "printPkgInfo", options)
+ 
+     if exitCode == 0 and output.len != 0:
+       result.writeFile(output)
 diff --git a/src/nimblepkg/options.nim b/src/nimblepkg/options.nim
-index f49ed04..eaceee8 100644
+index f49ed04..1e47efd 100644
 --- a/src/nimblepkg/options.nim
 +++ b/src/nimblepkg/options.nim
 @@ -13,6 +13,7 @@ type
@@ -111,7 +613,23 @@ index f49ed04..eaceee8 100644
      nimbleDir*: string
      verbosity*: cli.Priority
      action*: Action
-@@ -104,6 +105,8 @@ Options:
+@@ -41,6 +42,7 @@ type
+     of actionInstall, actionPath, actionUninstall, actionDevelop:
+       packages*: seq[PkgTuple] # Optional only for actionInstall
+                                # and actionDevelop.
++      passNimFlags*: seq[string]
+     of actionSearch:
+       search*: seq[string] # Search string.
+     of actionInit, actionDump:
+@@ -61,6 +63,7 @@ Usage: nimble COMMAND [opts]
+ Commands:
+   install      [pkgname, ...]     Installs a list of packages.
+                [-d, --depsOnly]   Install only dependencies.
++               [-p, --passNim]    Forward specified flag to compiler.
+   develop      [pkgname, ...]     Clones a list of packages for development.
+                                   Symlinks the cloned packages or any package
+                                   in the current working directory.
+@@ -104,6 +107,8 @@ Options:
    -v, --version                   Print version information.
    -y, --accept                    Accept all interactive prompts.
    -n, --reject                    Reject all interactive prompts.
@@ -120,7 +638,15 @@ index f49ed04..eaceee8 100644
        --ver                       Query remote server for package version
                                    information when searching or listing packages
        --nimbleDir:dirname         Set the Nimble directory.
-@@ -297,6 +300,8 @@ proc parseFlag*(flag, val: string, result: var Options, kind = cmdLongOption) =
+@@ -175,6 +180,7 @@ proc initAction*(options: var Options, key: string) =
+   case options.action.typ
+   of actionInstall, actionPath, actionDevelop, actionUninstall:
+     options.action.packages = @[]
++    options.action.passNimFlags = @[]
+   of actionCompile, actionDoc, actionBuild:
+     options.action.compileOptions = @[]
+     options.action.file = ""
+@@ -297,12 +303,16 @@ proc parseFlag*(flag, val: string, result: var Options, kind = cmdLongOption) =
          result.queryInstalled = true
        of "ver":
          result.queryVersions = true
@@ -129,10 +655,27 @@ index f49ed04..eaceee8 100644
        else:
          wasFlagHandled = false
      of actionInstall:
+       case f
+       of "depsonly", "d":
+         result.depsOnly = true
++      of "passnim", "p":
++        result.action.passNimFlags.add(val)
+       else:
+         wasFlagHandled = false
+     of actionUninstall:
 diff --git a/src/nimblepkg/packageinfo.nim b/src/nimblepkg/packageinfo.nim
-index c54b97d..ab02590 100644
+index c54b97d..1d28780 100644
 --- a/src/nimblepkg/packageinfo.nim
 +++ b/src/nimblepkg/packageinfo.nim
+@@ -3,7 +3,7 @@
+ 
+ # Stdlib imports
+ import system except TResult
+-import parsecfg, json, streams, strutils, parseutils, os, sets, tables
++import hashes, parsecfg, json, streams, strutils, parseutils, os, sets, tables
+ import httpclient
+ 
+ # Local imports
 @@ -427,6 +427,17 @@ proc echoPackage*(pkg: Package) =
      if pkg.web.len > 0:
        echo("  website:     " & pkg.web)
@@ -151,3 +694,237 @@ index c54b97d..ab02590 100644
  proc getDownloadDirName*(pkg: Package, verRange: VersionRange): string =
    result = pkg.name
    let verSimple = getSimpleString(verRange)
+@@ -542,6 +553,11 @@ proc `==`*(pkg1: PackageInfo, pkg2: PackageInfo): bool =
+   if pkg1.name == pkg2.name and pkg1.myPath == pkg2.myPath:
+     return true
+ 
++proc hash*(x: PackageInfo): Hash =
++  var h: Hash = 0
++  h = h !& hash(x.myPath)
++  result = !$h
++
+ when isMainModule:
+   doAssert getNameVersion("/home/user/.nimble/libs/packagea-0.1") ==
+       ("packagea", "0.1")
+diff --git a/src/nimblepkg/reversedeps.nim b/src/nimblepkg/reversedeps.nim
+index 0da2a84..45d9940 100644
+--- a/src/nimblepkg/reversedeps.nim
++++ b/src/nimblepkg/reversedeps.nim
+@@ -1,7 +1,7 @@
+ # Copyright (C) Dominik Picheta. All rights reserved.
+ # BSD License. Look at license.txt for more info.
+ 
+-import os, json
++import os, json, sets
+ 
+ import options, common, version, download, packageinfo
+ 
+@@ -58,7 +58,7 @@ proc removeRevDep*(nimbleData: JsonNode, pkg: PackageInfo) =
+         newData[key] = newVal
+   nimbleData["reverseDeps"] = newData
+ 
+-proc getRevDeps*(options: Options, pkg: PackageInfo): seq[PkgTuple] =
++proc getRevDepTups*(options: Options, pkg: PackageInfo): seq[PkgTuple] =
+   ## Returns a list of *currently installed* reverse dependencies for `pkg`.
+   result = @[]
+   let thisPkgsDep =
+@@ -76,18 +76,25 @@ proc getRevDeps*(options: Options, pkg: PackageInfo): seq[PkgTuple] =
+ 
+       result.add(pkgTup)
+ 
+-proc getAllRevDeps*(options: Options, pkg: PackageInfo, result: var seq[PackageInfo]) =
++proc getRevDeps*(options: Options, pkg: PackageInfo): HashSet[PackageInfo] =
++  result.init()
++  let installedPkgs = getInstalledPkgsMin(options.getPkgsDir(), options)
++  for rdepTup in getRevDepTups(options, pkg):
++    for rdepInfo in findAllPkgs(installedPkgs, rdepTup):
++      result.incl rdepInfo
++
++proc getAllRevDeps*(options: Options, pkg: PackageInfo, result: var HashSet[PackageInfo]) =
+   if pkg in result:
+     return
+ 
+   let installedPkgs = getInstalledPkgsMin(options.getPkgsDir(), options)
+-  for rdepTup in getRevDeps(options, pkg):
++  for rdepTup in getRevDepTups(options, pkg):
+     for rdepInfo in findAllPkgs(installedPkgs, rdepTup):
+       if rdepInfo in result:
+         continue
+ 
+       getAllRevDeps(options, rdepInfo, result)
+-  result.add pkg
++  result.incl pkg
+ 
+ when isMainModule:
+   var nimbleData = %{"reverseDeps": newJObject()}
+diff --git a/src/nimblepkg/version.nim b/src/nimblepkg/version.nim
+index a3e7c4a..4834b6d 100644
+--- a/src/nimblepkg/version.nim
++++ b/src/nimblepkg/version.nim
+@@ -93,6 +93,11 @@ proc `==`*(ver: Version, ver2: Version): bool =
+     else:
+       return false
+ 
++proc cmp*(a, b: Version): int =
++  if a < b: -1
++  elif a > b: 1
++  else: 0
++
+ proc `<=`*(ver: Version, ver2: Version): bool =
+   return (ver == ver2) or (ver < ver2)
+ 
+@@ -272,7 +277,7 @@ proc newVREq*(ver: string): VersionRange =
+   result.ver = newVersion(ver)
+ 
+ proc findLatest*(verRange: VersionRange,
+-        versions: Table[Version, string]): tuple[ver: Version, tag: string] =
++        versions: OrderedTable[Version, string]): tuple[ver: Version, tag: string] =
+   result = (newVersion(""), "")
+   for ver, tag in versions:
+     if not withinRange(ver, verRange): continue
+@@ -309,8 +314,11 @@ when isMainModule:
+   doAssert(newVersion("") < newVersion("1.0.0"))
+   doAssert(newVersion("") < newVersion("0.1.0"))
+ 
+-  var versions = toTable[Version, string]({newVersion("0.1.1"): "v0.1.1",
+-      newVersion("0.2.3"): "v0.2.3", newVersion("0.5"): "v0.5"})
++  var versions = toOrderedTable[Version, string]({
++    newVersion("0.1.1"): "v0.1.1",
++    newVersion("0.2.3"): "v0.2.3",
++    newVersion("0.5"): "v0.5"
++  })
+   doAssert findLatest(parseVersionRange(">= 0.1 & <= 0.4"), versions) ==
+       (newVersion("0.2.3"), "v0.2.3")
+ 
+diff --git a/tests/issue678/issue678.nimble b/tests/issue678/issue678.nimble
+new file mode 100644
+index 0000000..20239e7
+--- /dev/null
++++ b/tests/issue678/issue678.nimble
+@@ -0,0 +1,12 @@
++# Package
++
++version     = "0.1.0"
++author      = "Ivan Bobev"
++description = "Package for ensuring that issue #678 is resolved."
++license     = "MIT"
++
++# Dependencies
++
++requires "nim >= 0.19.6"
++# to reproduce dependency 2 must be before 1
++requires "issue678_dependency_2", "issue678_dependency_1"
+diff --git a/tests/issue678/packages.json b/tests/issue678/packages.json
+new file mode 100644
+index 0000000..972eb70
+--- /dev/null
++++ b/tests/issue678/packages.json
+@@ -0,0 +1,19 @@
++[
++  {
++    "name": "issue678_dependency_1",
++    "url": "https://github.com/nimble-test/issue678?subdir=dependency_1",
++    "method": "git",
++    "tags": [ "test" ], 
++    "description":
++      "Both first and second level dependency of the issue678 package.",
++    "license": "MIT"
++  },
++  {
++    "name": "issue678_dependency_2",
++    "url": "https://github.com/nimble-test/issue678?subdir=dependency_2",
++    "method": "git",
++    "tags": [ "test" ],
++    "description": "First level dependency of the issue678 package.",
++    "license": "MIT"
++  }
++]
+diff --git a/tests/passNimFlags/passNimFlags.nim b/tests/passNimFlags/passNimFlags.nim
+new file mode 100644
+index 0000000..b4c0b97
+--- /dev/null
++++ b/tests/passNimFlags/passNimFlags.nim
+@@ -0,0 +1 @@
++when not defined(passNimIsWorking): {.error: "-d:passNimIsWorking wasn't passed to the compiler"}
+diff --git a/tests/passNimFlags/passNimFlags.nimble b/tests/passNimFlags/passNimFlags.nimble
+new file mode 100644
+index 0000000..8530524
+--- /dev/null
++++ b/tests/passNimFlags/passNimFlags.nimble
+@@ -0,0 +1,11 @@
++# Package
++
++version       = "0.1.0"
++author        = "SolitudeSF"
++description   = "Test nimble install flag forwarding"
++license       = "BSD"
++bin           = @["passNimFlags"]
++
++# Dependencies
++
++requires "nim >= 0.13.0"
+diff --git a/tests/tester.nim b/tests/tester.nim
+index bd7a306..09427e8 100644
+--- a/tests/tester.nim
++++ b/tests/tester.nim
+@@ -465,8 +465,7 @@ test "can uninstall":
+ 
+     let ls = outp.strip.processOutput()
+     check exitCode != QuitSuccess
+-    check "Cannot uninstall issue27b (0.1.0) because issue27a (0.1.0) depends" &
+-          " on it" in ls[ls.len-1]
++    check inLines(ls, "Cannot uninstall issue27b (0.1.0) because issue27a (0.1.0) depends")
+ 
+     check execNimble("uninstall", "-y", "issue27").exitCode == QuitSuccess
+     check execNimble("uninstall", "-y", "issue27a").exitCode == QuitSuccess
+@@ -818,3 +817,50 @@ suite "Module tests":
+   test "cli":
+     cd "..":
+       check execCmdEx("nim c -r src/nimblepkg/cli").exitCode == QuitSuccess
++
++  test "download":
++    cd "..":
++      check execCmdEx("nim c -r src/nimblepkg/download").exitCode == QuitSuccess
++
++test "init does not overwrite existing files (#581)":
++  createDir("issue581/src")
++  cd "issue581":
++    const Src = "echo \"OK\""
++    writeFile("src/issue581.nim", Src)
++    check execNimbleYes("init").exitCode == QuitSuccess
++    check readFile("src/issue581.nim") == Src
++  removeDir("issue581")
++
++test "remove skips packages with revDeps (#504)":
++  check execNimble("install", "nimboost@0.5.5", "nimfp@0.4.4", "-y").exitCode == QuitSuccess
++
++  var (output, exitCode) = execNimble("uninstall", "nimboost", "nimfp", "-n")
++  var lines = output.strip.processOutput()
++  check inLines(lines, "Cannot uninstall nimboost")
++
++  (output, exitCode) = execNimble("uninstall", "nimfp", "nimboost", "-y")
++  lines = output.strip.processOutput()
++  check (not inLines(lines, "Cannot uninstall nimboost"))
++
++  check execNimble("path", "nimboost").exitCode != QuitSuccess
++  check execNimble("path", "nimfp").exitCode != QuitSuccess
++
++test "pass options to the compiler with `nimble install`":
++  cd "passNimFlags":
++    check execNimble("install", "--passNim:-d:passNimIsWorking").exitCode == QuitSuccess
++
++test "do not install single dependency multiple times (#678)":
++  # for the test to be correct, the tested package and its dependencies must not
++  # exist in the local cache
++  removeDir("nimbleDir")
++  cd "issue678":
++    testRefresh():
++      writeFile(configFile, """
++        [PackageList]
++        name = "local"
++        path = "$1"
++      """.unindent % (getCurrentDir() / "packages.json").replace("\\", "\\\\"))
++      check execNimble(["refresh"]).exitCode == QuitSuccess
++      let (output, exitCode) = execNimble("install", "-y")
++      check exitCode == QuitSuccess
++      check output.find("issue678_dependency_1@0.1.0 already exists") == -1

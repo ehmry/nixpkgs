@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "name": "mpwc",
+    "url": "https://github.com/SolitudeSF/mpwc",
+    "method": "git",
+    "tags": [
+      "masterpassword",
+      "password",
+      "manager",
+      "stateless"
+    ],
+    "description": "Master Password command line utility",
+    "license": "MIT",
+    "web": "https://github.com/SolitudeSF/mpwc"
+  },
+  "src": {
+    "url": "https://github.com/SolitudeSF/mpwc",
+    "rev": "dd5bfe2d7f70f5e5032aa7fb65c5c1c7b2b8e19a",
+    "date": "2019-06-08T13:19:14+03:00",
+    "sha256": "15p8v9k4plmd4qrahqx5rx4502crqyfmal1nil59m9hf0v3b83n3",
+    "fetchSubmodules": false
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "meta": {
+    "name": "cligen",
+    "url": "https://github.com/c-blake/cligen.git",
+    "method": "git",
+    "tags": [
+      "library",
+      "command-line",
+      "arguments",
+      "switches",
+      "parsing",
+      "options"
+    ],
+    "description": "Infer & generate command-line interace/option/argument parsers",
+    "license": "MIT",
+    "web": "https://github.com/c-blake/cligen"
+  },
+  "src": {
+    "url": "https://github.com/c-blake/cligen.git",
+    "rev": "418ee606d28c89d404780ee1cb58f027b11e60b3",
+    "date": "2019-08-28T01:23:46-04:00",
+    "sha256": "0dal7x04fz7k80xjv6nbya67yzm25bmm6myqyjm7wsd9gy0a56vh",
+    "fetchSubmodules": false
+  }
+}

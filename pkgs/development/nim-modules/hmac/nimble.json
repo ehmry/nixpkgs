@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "name": "hmac",
+    "url": "https://github.com/OpenSystemsLab/hmac.nim",
+    "method": "git",
+    "tags": [
+      "hmac",
+      "authentication",
+      "hash",
+      "sha1",
+      "md5"
+    ],
+    "description": "HMAC-SHA1 and HMAC-MD5 hashing in Nim",
+    "license": "MIT",
+    "web": "https://github.com/OpenSystemsLab/hmac.nim"
+  },
+  "src": {
+    "url": "https://github.com/OpenSystemsLab/hmac.nim",
+    "rev": "c0a5a777a5d3d1ef9772d6c2ea57130a8d58bc0e",
+    "date": "2019-08-18T16:50:47+07:00",
+    "sha256": "1mcv60a9gchvh811qfzrpiyn6fdgwy1kzfy4mhrm28zyaggmp9hc",
+    "fetchSubmodules": false
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "meta": {
+    "name": "tempfile",
+    "url": "https://github.com/OpenSystemsLab/tempfile.nim",
+    "method": "git",
+    "tags": [
+      "temp",
+      "mktemp",
+      "make",
+      "mk",
+      "mkstemp",
+      "mkdtemp"
+    ],
+    "description": "Temporary files and directories",
+    "license": "MIT",
+    "web": "https://github.com/OpenSystemsLab/tempfile.nim"
+  },
+  "src": {
+    "url": "https://github.com/OpenSystemsLab/tempfile.nim",
+    "rev": "26e0239441755e5edcfd170e9aa566bb9c9eb6f3",
+    "date": "2019-02-26T23:16:00+07:00",
+    "sha256": "10d1g09q6p554pwr6a3b6ajnwqbphz3a4cwkfa05jbviflfyzjyk",
+    "fetchSubmodules": false
+  }
+}

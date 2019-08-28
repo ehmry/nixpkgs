@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "name": "cbor",
+    "url": "https://github.com/ehmry/nim-cbor",
+    "method": "git",
+    "tags": [
+      "library",
+      "cbor",
+      "binary",
+      "encoding"
+    ],
+    "description": "Concise Binary Object Representation decoder (RFC7049).",
+    "license": "MIT",
+    "web": "https://github.com/ehmry/nim-cbor"
+  },
+  "src": {
+    "url": "https://github.com/ehmry/nim-cbor",
+    "rev": "afcc9f0657b19e45c025e157982070990b01acfe",
+    "date": "2019-07-01T20:10:23+02:00",
+    "sha256": "1qlq8sciw1ngj1m57l8m7kx01wyf7h8kszcc1mljj0g58bsl5vzr",
+    "fetchSubmodules": false
+  }
+}

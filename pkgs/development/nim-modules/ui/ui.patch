@@ -1,0 +1,15 @@
+diff --git a/ui/rawui.nim b/ui/rawui.nim
+index 151d435..a0cc131 100644
+--- a/ui/rawui.nim
++++ b/ui/rawui.nim
+@@ -15,10 +15,6 @@ else:
+     # thanks to 'import math' missing linking flags are added
+     import math
+     from strutils import replace
+-    const cflags = (staticExec"pkg-config --cflags gtk+-3.0").replace('\L', ' ')
+-    const lflags = (staticExec"pkg-config --libs gtk+-3.0").replace('\L', ' ')
+-    {.passC: cflags.}
+-    {.passL: lflags.}
+ 
+   {.compile: ("./libui/common/*.c", "common_$#.obj").}
+   when defined(windows):

@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "name": "ui",
+    "url": "https://github.com/nim-lang/ui",
+    "method": "git",
+    "tags": [
+      "library",
+      "GUI",
+      "libui",
+      "toolkit"
+    ],
+    "description": "A wrapper for libui",
+    "license": "MIT",
+    "web": "https://github.com/nim-lang/ui"
+  },
+  "src": {
+    "url": "https://github.com/nim-lang/ui",
+    "rev": "1593af4357b41d1343ae939767cd735531c35749",
+    "date": "2019-06-06T13:10:14+02:00",
+    "sha256": "1fi7qbsf6mw59g6bd6gv7xabfnpcqcjh2bf6h7l4qj26lvlgc5vb",
+    "fetchSubmodules": false
+  }
+}

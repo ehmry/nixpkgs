@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "name": "masterpassword",
+    "url": "https://github.com/SolitudeSF/masterpassword",
+    "method": "git",
+    "tags": [
+      "masterpassword",
+      "password",
+      "stateless"
+    ],
+    "description": "Master Password algorith implementation",
+    "license": "MIT",
+    "web": "https://github.com/SolitudeSF/masterpassword"
+  },
+  "src": {
+    "url": "https://github.com/SolitudeSF/masterpassword",
+    "rev": "fbddbac4dbab39d11cc18b595d8a5cf3b29b27f6",
+    "date": "2019-06-04T16:49:56+03:00",
+    "sha256": "04brnapi6sqgz4bwca9psd5v9nw5kbgsghs8xqd564yhh749accn",
+    "fetchSubmodules": false
+  }
+}
