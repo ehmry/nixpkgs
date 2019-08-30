@@ -45,11 +45,17 @@ META_NIMBLE=$(
 SRC_METHOD=$(jq ".method" <<< "$META_NIMBLE" | xargs)
 SRC_URL=$(jq ".url" <<< "$META_NIMBLE" | xargs)
 SRC_REV=$(jq '.versions | .[0]' <<< "$META_NIMBLE" | xargs)
+VERSION=$SRC_REV
+
+if [ "$SRC_REV" == "null" ]; then
+	SRC_REV=
+	VERSION=head
+fi
 
 case "$SRC_METHOD" in
 	git)
 	SRC_FUNC=fetchgit
-	META_SRC=$(nix-prefetch-git --quiet --url $SRC_URL --rev $SRC_REV)
+	META_SRC=$(nix-prefetch-git --quiet $SRC_URL $SRC_REV)
 	;;
 
 	*)
@@ -73,7 +79,7 @@ if [ ! -e default.nix ]; then
 	in
 	buildNimblePackage {
 	  nimbleMeta = nimble.meta;
-	  version = "$SRC_REV";
+	  version = "$VERSION";
 	  src = $SRC_FUNC {
 	    inherit (nimble.src) url rev sha256;
 	  };
