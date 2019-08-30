@@ -69,20 +69,18 @@ test -z "$META_SRC" && exit 1
 # Pretty print metadata into 'nimble.json'
 jq <<< "{ \"nimble\": $META_NIMBLE, \"src\": $META_SRC }" > nimble.json
 
-# Create a default.nix if one does not exist
-if [ ! -e default.nix ]; then
-	cat <<-EOF > default.nix
-	{ buildNimblePackage, $SRC_FUNC }:
-	let
-	  nimble = with builtins;
-	    fromJSON (readFile ./nimble.json);
-	in
-	buildNimblePackage {
-	  nimbleMeta = nimble.meta;
-	  version = "$VERSION";
-	  src = $SRC_FUNC {
-	    inherit (nimble.src) url rev sha256;
-	  };
-	}
-	EOF
-fi
+# Create a default.nix
+cat <<-EOF > default.nix
+{ buildNimblePackage, $SRC_FUNC }:
+let
+  json = with builtins;
+    fromJSON (readFile ./nimble.json);
+in
+buildNimblePackage {
+  nimbleMeta = json.meta;
+  version = "$VERSION";
+  src = $SRC_FUNC {
+    inherit (json.src) url rev sha256;
+  };
+}
+EOF
