@@ -14,7 +14,6 @@
 , NIX_LDFLAGS ? []
 , nimbleLdFlags ? []
 , nimbleLdPath ? []
-, doCheck ? true
 , meta ? {}
 , ... }@attrs:
 
@@ -41,7 +40,7 @@ let
 in
 stdenv.mkDerivation (attrs // {
   name = "${nimbleMeta.name}-${version}";
-  inherit version doCheck passthru;
+  inherit version passthru;
   nimbleMeta = null;
 
   enableParallelBuilding = true;
@@ -107,10 +106,14 @@ stdenv.mkDerivation (attrs // {
             mkdir -p $out
             cp -aL $NIMBLE_DIR/bin $out/bin
         fi
-        if [ -d $NIMBLE_DIR/pkgs/$name ]; then
-            mkdir -p $out/nimble-pkgs
-            cp -a $NIMBLE_DIR/pkgs/$name $out/nimble-pkgs
+        if [ ! -d $NIMBLE_DIR/pkgs/$name ]; then
+            echo A $name package not found, wrong package version?
+            echo -n "Found packages: "
+            ls $NIMBLE_DIR/pkgs
+            exit 1
         fi
+        mkdir -p $out/nimble-pkgs
+        cp -a $NIMBLE_DIR/pkgs/$name $out/nimble-pkgs
         runHook postInstall
       ''
     else installPhase;
