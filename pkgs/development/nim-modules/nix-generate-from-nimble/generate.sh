@@ -49,13 +49,13 @@ VERSION=$SRC_REV
 
 if [ "$SRC_REV" == "null" ]; then
 	SRC_REV=
-	VERSION=head
+	VERSION=0.1.0
 fi
 
 case "$SRC_METHOD" in
 	git)
 	SRC_FUNC=fetchgit
-	META_SRC=$(nix-prefetch-git --quiet $SRC_URL $SRC_REV)
+	META_SRC=$(nix-prefetch-git --fetch-submodules --quiet $SRC_URL $SRC_REV)
 	;;
 
 	*)
@@ -77,10 +77,10 @@ let
     fromJSON (readFile ./nimble.json);
 in
 buildNimblePackage {
-  nimbleMeta = json.meta;
+  nimbleMeta = json.nimble;
   version = "$VERSION";
   src = $SRC_FUNC {
-    inherit (json.src) url rev sha256;
+    inherit (json.src) url rev sha256 fetchSubmodules;
   };
 }
 EOF
