@@ -8,7 +8,7 @@
 , enableShared ? true
 , texinfo ? null
 , perl ? null # optional, for texi2pod (then pod2man)
-, gmp, mpfr, libmpc, gettext, which
+, gmp, mpfr, libmpc, gettext, which, file
 , libelf                      # optional, for link-time optimizations (LTO)
 , isl ? null # optional, for the Graphite optimization framework.
 , zlib ? null
@@ -156,6 +156,9 @@ stdenv.mkDerivation ({
 
     substituteInPlace libgfortran/configure \
       --replace "-install_name \\\$rpath/\\\$soname" "-install_name $lib/lib/\\\$soname"
+
+    substituteInPlace libcc1/configure \
+      --replace "/usr/bin/file" "${file}/bin/file"
   '';
 
   postPatch = ''
@@ -192,7 +195,7 @@ stdenv.mkDerivation ({
     libcCross crossMingw;
 
   depsBuildBuild = [ buildPackages.stdenv.cc ];
-  nativeBuildInputs = [ texinfo which gettext ]
+  nativeBuildInputs = [ texinfo which gettext file ]
     ++ (optional (perl != null) perl);
 
   # For building runtime libs
