@@ -350,7 +350,7 @@ stdenv.mkDerivation ({
     isGNU = true;
   };
 
-  enableParallelBuilding = false;
+  enableParallelBuilding = true;
   inherit enableMultilib;
 
   inherit (stdenv) is64bit;
