@@ -415,6 +415,42 @@ index 5acf79cba54c..619c0d189a91 100755
    *-hpux*)
      SECTION_FLAGS='-ffunction-sections -fdata-sections'
  
+diff --git a/libstdc++-v3/configure.ac b/libstdc++-v3/configure.ac
+index dadd8827b493..9d5e2d44fd8d 100644
+--- a/libstdc++-v3/configure.ac
++++ b/libstdc++-v3/configure.ac
+@@ -88,9 +88,11 @@ CXXFLAGS="$save_CXXFLAGS"
+ GLIBCXX_CONFIGURE
+ 
+ # Libtool setup.
++if test "$is_hosted" = yes; then
+ if test "x${with_newlib}" != "xyes"; then
+   AC_LIBTOOL_DLOPEN
+ fi
++fi
+ AM_PROG_LIBTOOL
+ ACX_LT_HOST_FLAGS
+ AC_SUBST(enable_shared)
+@@ -209,7 +211,9 @@ AC_CHECK_HEADERS(fenv.h complex.h)
+ GLIBCXX_CHECK_C99_TR1
+ 
+ # For the EOF, SEEK_CUR, and SEEK_END integer constants.
++if test "$is_hosted" = yes; then
+ GLIBCXX_COMPUTE_STDIO_INTEGER_CONSTANTS
++fi
+ 
+ # For gettimeofday support.
+ GLIBCXX_CHECK_GETTIMEOFDAY
+@@ -377,7 +381,9 @@ GCC_CHECK_UNWIND_GETIPINFO
+ 
+ GCC_LINUX_FUTEX([AC_DEFINE(HAVE_LINUX_FUTEX, 1, [Define if futex syscall is available.])])
+ 
++if test "$is_hosted" = yes; then
+ GCC_HEADER_STDINT(include/gstdint.h)
++fi
+ 
+ GLIBCXX_ENABLE_SYMVERS([yes])
+ AC_SUBST(libtool_VERSION)
 diff --git a/libstdc++-v3/crossconfig.m4 b/libstdc++-v3/crossconfig.m4
 index 344eec09d8e7..65d0d6e6427d 100644
 --- a/libstdc++-v3/crossconfig.m4

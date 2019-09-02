@@ -197,7 +197,8 @@ stdenv.mkDerivation ({
 
   depsBuildBuild = [ buildPackages.stdenv.cc ];
   nativeBuildInputs = [ texinfo which gettext file ]
-    ++ (optional (perl != null) perl);
+    ++ (optional (perl != null) perl)
+    ++ optional (targetPlatform.isGenode) [ buildPackages.autoconf ];
 
   # For building runtime libs
   depsBuildTarget =
@@ -224,7 +225,13 @@ stdenv.mkDerivation ({
     export LDFLAGS_FOR_TARGET="-Wl,-rpath,$prefix/lib/amd64 $LDFLAGS_FOR_TARGET"
     export CXXFLAGS_FOR_TARGET="-Wl,-rpath,$prefix/lib/amd64 $CXXFLAGS_FOR_TARGET"
     export CFLAGS_FOR_TARGET="-Wl,-rpath,$prefix/lib/amd64 $CFLAGS_FOR_TARGET"
-  '';
+  '' + (if (targetPlatform.isGenode)
+  then ''
+    pushd libstdc++-v3
+    autoconf
+    popd
+  ''
+  else "");
 
   dontDisableStatic = true;
 
