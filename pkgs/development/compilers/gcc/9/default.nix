@@ -111,6 +111,7 @@ let version = "9.2.0";
           ]
           ++ optional (targetPlatform.libc == "newlib") "--with-newlib"
           ++ optional (targetPlatform.libc == "avrlibc") "--with-avrlibc"
+          ++ optional (targetPlatform.isGenode) "--disable-dlopen"
           ++ [
             "--enable-threads=${if targetPlatform.isUnix then "posix"
                                 else if targetPlatform.isWindows then "win32"
@@ -349,7 +350,7 @@ stdenv.mkDerivation ({
     isGNU = true;
   };
 
-  enableParallelBuilding = true;
+  enableParallelBuilding = false;
   inherit enableMultilib;
 
   inherit (stdenv) is64bit;
