@@ -283,7 +283,7 @@ index 000000000000..9a233dc1ccae
 +  %(shared:-shared) \
 +     %{!static:--eh-frame-hdr}"
 diff --git a/libgcc/config.host b/libgcc/config.host
-index 91abc84da036..b8790b8a5350 100644
+index 91abc84da036..22c621a80974 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
 @@ -103,7 +103,7 @@ arm*-*-*)
@@ -295,17 +295,18 @@ index 91abc84da036..b8790b8a5350 100644
  bfin*-*)
  	cpu_type=bfin
  	;;
-@@ -244,6 +244,9 @@ case ${host} in
- *-*-fuchsia*)
+@@ -245,6 +245,10 @@ case ${host} in
    tmake_file="$tmake_file t-crtstuff-pic t-libgcc-pic t-eh-dw2-dip t-slibgcc t-slibgcc-fuchsia"
    extra_parts="crtbegin.o crtend.o"
+   ;;
 +*-*-genode)
 +  tmake_file="$tmake_file t-crtstuff-pic t-libgcc-pic t-eh-dw2-dip"
 +  extra_parts="crtbegin.o crtbeginS.o crtbeginT.o crtend.o crtendS.o"
-   ;;
++  ;;
  *-*-linux* | frv-*-*linux* | *-*-kfreebsd*-gnu | *-*-gnu* | *-*-kopensolaris*-gnu)
    tmake_file="$tmake_file t-crtstuff-pic t-libgcc-pic t-eh-dw2-dip t-slibgcc t-slibgcc-gld t-slibgcc-elf-ver t-linux"
-@@ -343,12 +346,18 @@ i[34567]86-*-cygwin* | x86_64-*-cygwin*)
+   extra_parts="crtbegin.o crtbeginS.o crtbeginT.o crtend.o crtendS.o"
+@@ -343,12 +347,18 @@ i[34567]86-*-cygwin* | x86_64-*-cygwin*)
  esac
  
  case ${host} in
@@ -325,7 +326,7 @@ index 91abc84da036..b8790b8a5350 100644
  	;;
  aarch64*-*-freebsd*)
  	extra_parts="$extra_parts crtfastmath.o"
-@@ -458,7 +467,7 @@ arm*-*-phoenix*)
+@@ -458,7 +468,7 @@ arm*-*-phoenix*)
  	extra_parts="crtbegin.o crtend.o crti.o crtn.o"
  	unwind_header=config/arm/unwind-arm.h
  	;;
@@ -334,7 +335,7 @@ index 91abc84da036..b8790b8a5350 100644
  	tmake_file="${tmake_file} arm/t-arm arm/t-elf t-fixedpoint-gnu-prefix"
  	tm_file="$tm_file arm/bpabi-lib.h"
  	case ${host} in
-@@ -466,6 +475,10 @@ arm*-*-eabi* | arm*-*-symbianelf* | arm*-*-rtems*)
+@@ -466,6 +476,10 @@ arm*-*-eabi* | arm*-*-symbianelf* | arm*-*-rtems*)
  	  tmake_file="${tmake_file} arm/t-bpabi t-crtfm"
  	  extra_parts="crtbegin.o crtend.o crti.o crtn.o"
  	  ;;
@@ -345,7 +346,7 @@ index 91abc84da036..b8790b8a5350 100644
  	arm*-*-symbianelf*)
  	  tmake_file="${tmake_file} arm/t-symbian t-slibgcc-nolc-override"
  	  tm_file="$tm_file arm/symbian-lib.h"
-@@ -659,6 +672,10 @@ x86_64-*-freebsd*)
+@@ -659,6 +673,10 @@ x86_64-*-freebsd*)
  	tmake_file="${tmake_file} i386/t-freebsd i386/t-crtstuff"
  	md_unwind_header=i386/freebsd-unwind.h
  	;;
@@ -356,7 +357,7 @@ index 91abc84da036..b8790b8a5350 100644
  i[34567]86-*-netbsdelf*)
  	tmake_file="${tmake_file} i386/t-crtstuff"
  	;;
-@@ -853,7 +870,7 @@ lm32-*-rtems*)
+@@ -853,7 +871,7 @@ lm32-*-rtems*)
  lm32-*-uclinux*)
          extra_parts="$extra_parts crtbegin.o crtendS.o crtbeginT.o"
          tmake_file="lm32/t-lm32 lm32/t-uclinux t-libgcc-pic t-softfp-sfdf t-softfp"
@@ -365,7 +366,7 @@ index 91abc84da036..b8790b8a5350 100644
  m32r-*-elf*)
  	tmake_file="$tmake_file m32r/t-m32r t-fdpbit"
  	extra_parts="$extra_parts crtinit.o crtfini.o"
-@@ -1178,6 +1195,10 @@ powerpcle-*-eabi*)
+@@ -1178,6 +1196,10 @@ powerpcle-*-eabi*)
  	tmake_file="${tmake_file} rs6000/t-ppccomm rs6000/t-crtstuff t-crtstuff-pic t-fdpbit"
  	extra_parts="$extra_parts crtbegin.o crtend.o crtbeginS.o crtendS.o crtbeginT.o ecrti.o ecrtn.o ncrti.o ncrtn.o"
  	;;
