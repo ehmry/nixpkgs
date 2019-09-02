@@ -117,10 +117,10 @@ index 000000000000..c43ee5ce6a5f
 +   %{!static:--eh-frame-hdr}"
 diff --git a/gcc/config/arm/genode.h b/gcc/config/arm/genode.h
 new file mode 100644
-index 000000000000..e8be0c6543a0
+index 000000000000..a77c21f59d52
 --- /dev/null
 +++ b/gcc/config/arm/genode.h
-@@ -0,0 +1,51 @@
+@@ -0,0 +1,47 @@
 +/* Definitions for Genode based ARM systems using ELF
 +   Copyright (C) 2019 Free Software Foundation, Inc.
 +   Contributed by Emery Hemingway <ehmry@posteo.net>
@@ -156,10 +156,6 @@ index 000000000000..e8be0c6543a0
 +#define LINK_SPEC \
 +  "%(shared:-shared) \
 +   %{!static:--eh-frame-hdr}"
-+
-+/* Don't assume anything about the header files.
-+   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=57699 */
-+#define NO_IMPLICIT_EXTERN_C
 +
 +#undef ARM_DEFAULT_SHORT_ENUMS
 +#define ARM_DEFAULT_SHORT_ENUMS 0
@@ -208,10 +204,10 @@ index 000000000000..30a270e1cd9a
 +  while (false)
 diff --git a/gcc/config/i386/genode-x86_64.h b/gcc/config/i386/genode-x86_64.h
 new file mode 100644
-index 000000000000..ace1e54db6fe
+index 000000000000..bcdfca7b0d84
 --- /dev/null
 +++ b/gcc/config/i386/genode-x86_64.h
-@@ -0,0 +1,41 @@
+@@ -0,0 +1,37 @@
 +/* Definitions for Intel 386 running Genode with ELF format
 +   Copyright (C) 2019 Free Software Foundation, Inc.
 +   Contributed by Emery Hemingway
@@ -249,10 +245,6 @@ index 000000000000..ace1e54db6fe
 +   %{m32:-m elf_i386} \
 +   %{shared:-shared} \
 +   %{!static:--eh-frame-hdr}"
-+
-+/* Don't assume anything about the header files.  */
-+/* https://gcc.gnu.org/bugzilla/show_bug.cgi?id=57699 */
-+#define NO_IMPLICIT_EXTERN_C
 diff --git a/gcc/config/riscv/genode.h b/gcc/config/riscv/genode.h
 new file mode 100644
 index 000000000000..9a233dc1ccae
