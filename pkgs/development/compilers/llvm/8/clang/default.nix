@@ -49,6 +49,7 @@ let
       ./unwindlib.patch
       # https://reviews.llvm.org/D51899
       ./compiler-rt-baremetal.patch
+      ./genode.patch
     ];
 
     postPatch = ''

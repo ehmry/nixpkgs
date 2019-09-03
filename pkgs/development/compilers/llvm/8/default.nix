@@ -97,7 +97,7 @@ let
         targetLlvmLibraries.libcxx
         targetLlvmLibraries.libcxxabi
         targetLlvmLibraries.compiler-rt
-      ] ++ stdenv.lib.optionals (!stdenv.targetPlatform.isWasm) [
+      ] ++ stdenv.lib.optionals (!stdenv.targetPlatform.isGenode && !stdenv.targetPlatform.isWasm) [
         targetLlvmLibraries.libunwind
       ];
       extraBuildCommands = ''

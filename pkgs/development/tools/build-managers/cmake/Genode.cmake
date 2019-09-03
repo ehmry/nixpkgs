@@ -14,6 +14,10 @@ set(CMAKE_SHARED_LIBRARY_RPATH_LINK_C_FLAG "-Wl,-rpath-link,")
 set(CMAKE_SHARED_LIBRARY_SONAME_C_FLAG "-Wl,-soname,")
 set(CMAKE_EXE_EXPORTS_C_FLAG "-Wl,--export-dynamic")
 
+# Disable the stack protector until a later stage of LLVM migration
+set(CMAKE_C_FLAGS "-fno-stack-protector")
+set(CMAKE_CXX_FLAGS "-fno-stack-protector")
+
 # Shared libraries with no builtin soname may not be linked safely by
 # specifying the file path.
 set(CMAKE_PLATFORM_USES_PATH_WHEN_NO_SONAME 1)
