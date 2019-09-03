@@ -1,0 +1,40 @@
+Use the unified size types
+
+--- src/lib/libc/sys/arm/include/_types.h
++++ src/lib/libc/sys/arm/include/_types.h
+@@ -88,12 +88,12 @@ typedef	__int64_t	__int_least64_t;
+ typedef	__int32_t	__ptrdiff_t;		/* ptr1 - ptr2 */
+ typedef	__int32_t	__register_t;
+ typedef	__int32_t	__segsz_t;		/* segment size (in pages) */
+-typedef	__uint32_t	__size_t;		/* sizeof() */
+-typedef	__int32_t	__ssize_t;		/* byte count or error */
++typedef	__uint64_t	__size_t;		/* sizeof() */
++typedef	__int64_t	__ssize_t;		/* byte count or error */
+ typedef	__int64_t	__time_t;		/* time()... */
+-typedef	__uint32_t	__uintfptr_t;
++typedef	__uint64_t	__uintfptr_t;
+ typedef	__uint64_t	__uintmax_t;
+-typedef	__uint32_t	__uintptr_t;
++typedef	__uint64_t	__uintptr_t;
+ typedef	__uint32_t	__uint_fast8_t;
+ typedef	__uint32_t	__uint_fast16_t;
+ typedef	__uint32_t	__uint_fast32_t;
+
+--- src/lib/libc/sys/x86/include/_types.h
++++ src/lib/libc/sys/x86/include/_types.h
+@@ -112,11 +112,11 @@ typedef	__uint64_t	__uintptr_t;
+ typedef	__int32_t	__ptrdiff_t;
+ typedef	__int32_t	__register_t;
+ typedef	__int32_t	__segsz_t;
+-typedef	__uint32_t	__size_t;
+-typedef	__int32_t	__ssize_t;
++typedef	__uint64_t	__size_t;
++typedef	__int64_t	__ssize_t;
+ typedef	__int32_t	__time_t;
+-typedef	__uint32_t	__uintfptr_t;
+-typedef	__uint32_t	__uintptr_t;
++typedef	__uint64_t	__uintfptr_t;
++typedef	__uint64_t	__uintptr_t;
+ #endif
+ typedef	__uint64_t	__uintmax_t;
+ typedef	__uint32_t	__uint_fast8_t;
