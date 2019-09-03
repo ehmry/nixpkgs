@@ -465,20 +465,3 @@ index 344eec09d8e7..65d0d6e6427d 100644
    *-hpux*)
      SECTION_FLAGS='-ffunction-sections -fdata-sections'
      AC_SUBST(SECTION_FLAGS)
-diff --git a/libstdc++-v3/libsupc++/new_opa.cc b/libstdc++-v3/libsupc++/new_opa.cc
-index 0303ecde6bd9..5c6c104231be 100644
---- a/libstdc++-v3/libsupc++/new_opa.cc
-+++ b/libstdc++-v3/libsupc++/new_opa.cc
-@@ -25,7 +25,12 @@
- 
- #include <bits/c++config.h>
- #include <stdlib.h>
-+#if defined(__GENODE__)
-+#include "../../gcc/ginclude/stdint-gcc.h"
-+extern "C" void *malloc (std::size_t);
-+#else
- #include <stdint.h>
-+#endif
- #include <bits/exception_defines.h>
- #include <bit>
- #include "new"
