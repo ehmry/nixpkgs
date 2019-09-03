@@ -1,7 +1,10 @@
 { lib, stdenv, fetch, cmake, python, libcxxabi, fixDarwinDylibNames, version
 , enableShared ? true }:
 
-stdenv.mkDerivation {
+let
+  enableShared' = if enableShared then !stdenv.hostPlatform.isGenode else false;
+in
+stdenv.mkDerivation rec {
   pname = "libc++";
   inherit version;
 
@@ -12,7 +15,9 @@ stdenv.mkDerivation {
     export LIBCXXABI_INCLUDE_DIR="$PWD/$(ls -d libcxxabi-${version}*)/include"
   '';
 
-  patches = stdenv.lib.optional stdenv.hostPlatform.isMusl ../../libcxx-0001-musl-hacks.patch;
+  patches = with stdenv.hostPlatform; []
+    ++ stdenv.lib.optional isMusl ../../libcxx-0001-musl-hacks.patch
+    ++ stdenv.lib.optional isGenode ./genode.patch;
 
   prePatch = ''
     substituteInPlace lib/CMakeLists.txt --replace "/usr/lib/libc++" "\''${LIBCXX_LIBCXXABI_LIB_PATH}/libc++"
@@ -25,7 +30,7 @@ stdenv.mkDerivation {
     patchShebangs utils/cat_files.py
   '';
   nativeBuildInputs = [ cmake ]
-    ++ stdenv.lib.optional (stdenv.hostPlatform.isMusl || stdenv.hostPlatform.isWasi) python;
+    ++ stdenv.lib.optional (with stdenv.hostPlatform; (isMusl || isWasi || isGenode)) python;
 
   buildInputs = [ libcxxabi ] ++ lib.optional stdenv.isDarwin fixDarwinDylibNames;
 
@@ -35,11 +40,13 @@ stdenv.mkDerivation {
     "-DLIBCXX_CXX_ABI=libcxxabi"
   ] ++ stdenv.lib.optional (stdenv.hostPlatform.isMusl || stdenv.hostPlatform.isWasi) "-DLIBCXX_HAS_MUSL_LIBC=1"
     ++ stdenv.lib.optional (stdenv.hostPlatform.useLLVM or false) "-DLIBCXX_USE_COMPILER_RT=ON"
+    ++ stdenv.lib.optional stdenv.hostPlatform.isGenode
+      "-DLIBCXX_ENABLE_THREADS=OFF"
     ++ stdenv.lib.optional stdenv.hostPlatform.isWasm [
       "-DLIBCXX_ENABLE_THREADS=OFF"
       "-DLIBCXX_ENABLE_FILESYSTEM=OFF"
       "-DLIBCXX_ENABLE_EXCEPTIONS=OFF"
-    ] ++ stdenv.lib.optional (!enableShared) "-DLIBCXX_ENABLE_SHARED=OFF";
+    ] ++ stdenv.lib.optional (!enableShared') "-DLIBCXX_ENABLE_SHARED=OFF";
 
   enableParallelBuilding = true;
 

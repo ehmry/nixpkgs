@@ -1,5 +1,11 @@
 { stdenv, version, fetch, cmake, fetchpatch, enableShared ? true }:
 
+let
+  enableShared' = if stdenv.targetPlatform ? isGenode then
+    !stdenv.targetPlatform.isGenode
+  else
+    false;
+in
 stdenv.mkDerivation {
   pname = "libunwind";
   inherit version;
@@ -21,5 +27,5 @@ stdenv.mkDerivation {
 
   enableParallelBuilding = true;
 
-  cmakeFlags = stdenv.lib.optional (!enableShared) "-DLIBUNWIND_ENABLE_SHARED=OFF";
+  cmakeFlags = stdenv.lib.optional (!enableShared') "-DLIBUNWIND_ENABLE_SHARED=OFF";
 }

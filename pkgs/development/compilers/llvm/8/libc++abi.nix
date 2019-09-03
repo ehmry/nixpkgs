@@ -1,6 +1,9 @@
 { stdenv, cmake, fetch, libcxx, libunwind, llvm, version
 , enableShared ? true }:
 
+let
+  enableShared' = enableShared -> !stdenv.hostPlatform.isGenode;
+in
 stdenv.mkDerivation {
   pname = "libc++abi";
   inherit version;
@@ -8,7 +11,7 @@ stdenv.mkDerivation {
   src = fetch "libcxxabi" "1vznz8n1z1h8af0ga451m98lc2hjnv4fyzl71napsvjhvk4g6nxp";
 
   nativeBuildInputs = [ cmake ];
-  buildInputs = stdenv.lib.optional (!stdenv.isDarwin && !stdenv.isFreeBSD && !stdenv.hostPlatform.isWasm) libunwind;
+  buildInputs = stdenv.lib.optional (!stdenv.isDarwin && !stdenv.isFreeBSD && !stdenv.hostPlatform.isGenode && !stdenv.hostPlatform.isWasm) libunwind;
 
   cmakeFlags = stdenv.lib.optionals (stdenv.hostPlatform.useLLVM or false) [
     "-DLLVM_ENABLE_LIBCXX=ON"
@@ -16,11 +19,18 @@ stdenv.mkDerivation {
   ] ++ stdenv.lib.optionals stdenv.hostPlatform.isWasm [
     "-DLIBCXXABI_ENABLE_THREADS=OFF"
     "-DLIBCXXABI_ENABLE_EXCEPTIONS=OFF"
-  ] ++ stdenv.lib.optionals (!enableShared) [
+  ] ++ stdenv.lib.optionals (!enableShared') [
     "-DLIBCXXABI_ENABLE_SHARED=OFF"
-  ];
+  ] ++ stdenv.lib.optionals stdenv.hostPlatform.isGenode [
+      "-DCMAKE_C_FLAGS=-nodefaultlibs"
+      "-DLIBCXXABI_ENABLE_THREADS=OFF"
+      "-DLIBCXXABI_BAREMETAL=ON"
+      "-DLIBCXXABI_ENABLE_STATIC_UNWINDER=ON"
+    ];
 
-  patches = [ ./libcxxabi-no-threads.patch ];
+  patches = [
+    ./libcxxabi-no-threads.patch
+  ];
 
   postUnpack = ''
     unpackFile ${libcxx.src}
@@ -30,6 +40,8 @@ stdenv.mkDerivation {
     export TRIPLE=x86_64-apple-darwin
   '' + stdenv.lib.optionalString stdenv.hostPlatform.isMusl ''
     patch -p1 -d $(ls -d libcxx-*) -i ${../libcxx-0001-musl-hacks.patch}
+  '' + stdenv.lib.optionalString stdenv.targetPlatform.isGenode ''
+    patch -p1 -d $(ls -d llvm-*) -i ${./llvm-genode.patch}
   '' + stdenv.lib.optionalString stdenv.hostPlatform.isWasm ''
     patch -p1 -d $(ls -d llvm-*) -i ${./libcxxabi-wasm.patch}
   '';
@@ -50,8 +62,8 @@ stdenv.mkDerivation {
     else ''
       install -d -m 755 $out/include $out/lib
       install -m 644 lib/libc++abi.a $out/lib
-      install -m 644 ../include/cxxabi.h $out/include
-    '' + stdenv.lib.optionalString enableShared ''
+      install -m 644 ../include/*.h $out/include
+    '' + stdenv.lib.optionalString enableShared' ''
       install -m 644 lib/libc++abi.so.1.0 $out/lib
       ln -s libc++abi.so.1.0 $out/lib/libc++abi.so
       ln -s libc++abi.so.1.0 $out/lib/libc++abi.so.1
