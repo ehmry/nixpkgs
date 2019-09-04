@@ -92,6 +92,20 @@ stdenv.mkDerivation rec {
     sed -i 's|bin/cmake|${buildPackages.cmake}/bin/cmake|g' Makefile
   '';
 
+  passthru = { inherit (stdenv) buildPlatform hostPlatform targetPlatform; };
+
+  postInstall = with stdenv; if targetPlatform ? isGenode && targetPlatform.isGenode then ''
+    local MODULE="$out/share/cmake-${
+      lib.versions.majorMinor version
+    }/Modules/Platform/Genode.cmake"
+    if [ -e "$MODULE" ]; then
+        echo "Upstream provides $MODULE!"
+        exit 1
+    fi
+    cp ${./Genode.cmake} $MODULE
+  '' else
+    null;
+
   dontUseCmakeConfigure = true;
   enableParallelBuilding = true;
 
