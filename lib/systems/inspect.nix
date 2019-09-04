@@ -34,19 +34,20 @@ rec {
     isDarwin       = { kernel = { families = { inherit (kernelFamilies) darwin; }; }; };
     isUnix         = [ isBSD isDarwin isLinux isSunOS isCygwin ];
 
-    isMacOS        = { kernel = kernels.macos; };
+    isCygwin       = { kernel = kernels.windows; abi = abis.cygnus; };
+    isFreeBSD      = { kernel = kernels.freebsd; };
+    isGenode       = { kernel = kernels.genode; };
+    isGhcjs        = { kernel = kernels.ghcjs; };
     isiOS          = { kernel = kernels.ios; };
     isLinux        = { kernel = kernels.linux; };
-    isSunOS        = { kernel = kernels.solaris; };
-    isFreeBSD      = { kernel = kernels.freebsd; };
-    isNetBSD       = { kernel = kernels.netbsd; };
-    isOpenBSD      = { kernel = kernels.openbsd; };
-    isWindows      = { kernel = kernels.windows; };
-    isCygwin       = { kernel = kernels.windows; abi = abis.cygnus; };
+    isMacOS        = { kernel = kernels.macos; };
     isMinGW        = { kernel = kernels.windows; abi = abis.gnu; };
-    isWasi         = { kernel = kernels.wasi; };
-    isGhcjs        = { kernel = kernels.ghcjs; };
+    isNetBSD       = { kernel = kernels.netbsd; };
     isNone         = { kernel = kernels.none; };
+    isOpenBSD      = { kernel = kernels.openbsd; };
+    isSunOS        = { kernel = kernels.solaris; };
+    isWasi         = { kernel = kernels.wasi; };
+    isWindows      = { kernel = kernels.windows; };
 
     isAndroid      = [ { abi = abis.android; } { abi = abis.androideabi; } ];
     isMusl         = with abis; map (a: { abi = a; }) [ musl musleabi musleabihf ];

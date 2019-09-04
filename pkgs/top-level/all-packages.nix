@@ -11113,6 +11113,7 @@ in
     else if name == "libSystem" then targetPackages.darwin.xcode
     else if name == "nblibc" then targetPackages.netbsdCross.libc
     else if name == "wasilibc" then targetPackages.wasilibc or wasilibc
+    else if stdenv.targetPlatform.isGenode then null
     else if stdenv.targetPlatform.isGhcjs then null
     else throw "Unknown libc ${name}";
 
