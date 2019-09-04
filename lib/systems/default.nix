@@ -17,7 +17,7 @@ rec {
   elaborate = args': let
     args = if lib.isString args' then { system = args'; }
            else args';
-    final = {
+    final = (if (args ? config || args ? system) then {
       # Prefer to parse `config` as it is strictly more informative.
       parsed = parse.mkSystemFromString (if args ? config then args.config else args.system);
       # Either of these can be losslessly-extracted from `parsed` iff parsing succeeds.
@@ -40,6 +40,7 @@ rec {
         else if final.isAvr                 then "avrlibc"
         else if final.isNetBSD              then "nblibc"
         # TODO(@Ericson2314) think more about other operating systems
+        # TODO(@ehmry) contact @Ericson2314 about this.
         else                                     "native/impure";
       extensions = {
         sharedLibrary =
@@ -120,7 +121,8 @@ rec {
         then "${pkgs.wasmtime}/bin/wasmtime"
         else throw "Don't know how to run ${final.config} executables.";
 
-    } // mapAttrs (n: v: v final.parsed) inspect.predicates
+    } else (parse.mkSystemFromImports args))
+      // mapAttrs (n: v: v final.parsed) inspect.predicates
       // args;
   in assert final.useAndroidPrebuilt -> final.isAndroid;
      assert lib.foldl

@@ -19,7 +19,6 @@ with lib.lists;
 with lib.types;
 with lib.attrsets;
 with lib.strings;
-with (import ./inspect.nix { inherit lib; }).predicates;
 
 let
   inherit (lib.options) mergeOneOption;
@@ -29,7 +28,10 @@ let
       assert type.check value;
       setType type.name ({ inherit name; } // value));
 
+  inspect = import ./inspect.nix { inherit lib; };
 in
+
+with inspect.predicates;
 
 rec {
 
@@ -444,4 +446,87 @@ rec {
 
   ################################################################################
 
+  nullPlatform = with builtins;
+    { cpu = { name = "unknown"; };
+      vendor = "unknown";
+      kernel = { name = "unknown"; };
+      abi = "unknown";
+      uname.release = null;
+    } //
+    listToAttrs (map (name: {
+      inherit name;
+      value = false;
+    }) [
+      "isx86_32"
+      "isx86_64"
+      "isPowerPC"
+      "isPower"
+      "isx86"
+      "isAarch32"
+      "isAarch64"
+      "isMips"
+      "isRiscV"
+      "isSparc"
+      "isWasm"
+      "isMsp430"
+      "isAvr"
+      "isAlpha"
+      "isJavaScript"
+      "is32bit"
+      "is64bit"
+      "isBigEndian"
+      "isLittleEndian"
+      "isBSD"
+      "isDarwin"
+      "isUnix"
+      "isMacOS"
+      "isiOS"
+      "isLinux"
+      "isSunOS"
+      "isFreeBSD"
+      "isNetBSD"
+      "isOpenBSD"
+      "isWindows"
+      "isCygwin"
+      "isMinGW"
+      "isWasi"
+      "isGhcjs"
+      "isGenode"
+      "isNone"
+      "isAndroid"
+      "isMusl"
+      "isUClibc"
+      "isEfi"
+      "useAndroidPrebuilt"
+      "useiOSPrebuilt"
+    ]);
+
+  baseImports = attrs:
+    with builtins;
+    attrValues (intersectAttrs attrs {
+      isi686 = ./modules/x86.nix;
+      isx86_64 = ./modules/x86.nix;
+      isLinux = ./modules/linux.nix;
+    });
+
+  mkSystemFromImports' = { imports ? [ ], ... }@args:
+    let
+      callModule = m:
+        import m {
+          inherit abis execFormats kernels;
+          platform = args;
+        };
+
+      platform =
+        builtins.foldl' (a: m: lib.recursiveUpdate a (mkSystemFromImports' (callModule m)))
+        (args) ((baseImports args) ++ (imports));
+    in removeAttrs platform [ "imports" ];
+
+  mkSystemFromImports = args:
+    let final = mkSystemFromImports' (nullPlatform // args);
+    in (final // {
+      config = with final; "${cpu.name}-${vendor}-${kernel.name}-${abi}";
+      system = with final; "${cpu.name}-${kernel.name}";
+      parsed = { inherit (final) cpu kernel; };
+    });
 }
