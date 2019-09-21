@@ -1,4 +1,6 @@
-{ stdenv, version, fetch, cmake, fetchpatch, enableShared ? true }:
+{ stdenv, version, fetch, cmake, fetchpatch
+, enableShared ? true
+, isBaremetal ? false }:
 
 let
   enableShared' = if stdenv.targetPlatform ? isGenode then
@@ -23,9 +25,13 @@ stdenv.mkDerivation {
       url = "https://github.com/llvm-mirror/libunwind/commit/e050272d2eb57eb4e56a37b429a61df2ebb8aa3e.patch";
       sha256 = "1sxyx5xnax8k713jjcxgq3jq3cpnxygs2rcdf5vfja0f2k9jzldl";
     })
+  ] ++ stdenv.lib.optionals stdenv.hostPlatform.isGenode [
+    ./libunwind-genode.patch
   ];
 
   enableParallelBuilding = true;
 
-  cmakeFlags = stdenv.lib.optional (!enableShared') "-DLIBUNWIND_ENABLE_SHARED=OFF";
+  cmakeFlags = [ ]
+    ++ stdenv.lib.optional (!enableShared') "-DLIBUNWIND_ENABLE_SHARED=OFF"
+    ++ stdenv.lib.optional isBaremetal "-DLIBUNWIND_IS_BAREMETAL=ON";
 }
