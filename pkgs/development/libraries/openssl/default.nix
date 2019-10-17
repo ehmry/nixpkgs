@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, buildPackages, perl, coreutils
+{ stdenv, fetchurl, buildPackages, perl
 , withCryptodev ? false, cryptodev
 , enableSSL2 ? false
 , static ? false
@@ -27,7 +27,7 @@ let
           --replace /bin/rm rm
       done
     '' + optionalString (versionAtLeast version "1.1.1") ''
-      substituteInPlace config --replace '/usr/bin/env' '${coreutils}/bin/env'
+      substituteInPlace config --replace '/usr/bin/env' '${buildPackages.coreutils}/bin/env'
     '' + optionalString (versionAtLeast version "1.1.0" && stdenv.hostPlatform.isMusl) ''
       substituteInPlace crypto/async/arch/async_posix.h \
         --replace '!defined(__ANDROID__) && !defined(__OpenBSD__)' \
@@ -95,7 +95,7 @@ let
     '' +
     ''
       mkdir -p $bin
-      substituteInPlace $out/bin/c_rehash --replace ${buildPackages.perl} ${perl}
+      rm $out/bin/c_rehash
       mv $out/bin $bin/
 
       mkdir $dev
