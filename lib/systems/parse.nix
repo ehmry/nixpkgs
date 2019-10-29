@@ -263,17 +263,18 @@ rec {
   kernels = with execFormats; with kernelFamilies; setTypes types.openKernel {
     # TODO(@Ericson2314): Don't want to mass-rebuild yet to keeping 'darwin' as
     # the nnormalized name for macOS.
-    macos   = { execFormat = macho;   families = { inherit darwin; }; name = "darwin"; };
-    ios     = { execFormat = macho;   families = { inherit darwin; }; };
     freebsd = { execFormat = elf;     families = { inherit bsd; }; };
+    genode  = { execFormat = elf;     families = { }; };
+    ghcjs   = { execFormat = unknown; families = { }; };
+    ios     = { execFormat = macho;   families = { inherit darwin; }; };
     linux   = { execFormat = elf;     families = { }; };
+    macos   = { execFormat = macho;   families = { inherit darwin; }; name = "darwin"; };
     netbsd  = { execFormat = elf;     families = { inherit bsd; }; };
     none    = { execFormat = unknown; families = { }; };
     openbsd = { execFormat = elf;     families = { inherit bsd; }; };
     solaris = { execFormat = elf;     families = { }; };
     wasi    = { execFormat = wasm;    families = { }; };
     windows = { execFormat = pe;      families = { }; };
-    ghcjs   = { execFormat = unknown; families = { }; };
   } // { # aliases
     # 'darwin' is the kernel for all of them. We choose macOS by default.
     darwin = kernels.macos;
@@ -384,6 +385,8 @@ rec {
       else if (elemAt l 2 == "wasi")
         then { cpu = elemAt l 0; vendor = elemAt l 1; kernel = "wasi";                       }
       else if hasPrefix "netbsd" (elemAt l 2)
+        then { cpu = elemAt l 0; vendor = elemAt l 1;    kernel = elemAt l 2;                }
+      else if hasPrefix "genode" (elemAt l 2)
         then { cpu = elemAt l 0; vendor = elemAt l 1;    kernel = elemAt l 2;                }
       else if (elem (elemAt l 2) ["eabi" "eabihf" "elf"])
         then { cpu = elemAt l 0; vendor = "unknown"; kernel = elemAt l 1; abi = elemAt l 2; }

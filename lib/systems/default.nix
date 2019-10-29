@@ -29,16 +29,16 @@ rec {
       isCompatible = platform: parse.isCompatible final.parsed.cpu platform.parsed.cpu;
       # Derived meta-data
       libc =
-        /**/ if final.isDarwin              then "libSystem"
-        else if final.isMinGW               then "msvcrt"
-        else if final.isWasi                then "wasilibc"
-        else if final.isMusl                then "musl"
-        else if final.isUClibc              then "uclibc"
-        else if final.isAndroid             then "bionic"
-        else if final.isLinux /* default */ then "glibc"
-        else if final.isMsp430              then "newlib"
+        /**/ if final.isAndroid             then "bionic"
         else if final.isAvr                 then "avrlibc"
+        else if final.isDarwin              then "libSystem"
+        else if final.isLinux /* default */ then "glibc"
+        else if final.isMinGW               then "msvcrt"
+        else if final.isMsp430              then "newlib"
+        else if final.isMusl                then "musl"
         else if final.isNetBSD              then "nblibc"
+        else if final.isUClibc              then "uclibc"
+        else if final.isWasi                then "wasilibc"
         # TODO(@Ericson2314) think more about other operating systems
         else                                     "native/impure";
       extensions = {
@@ -53,18 +53,20 @@ rec {
       # Misc boolean options
       useAndroidPrebuilt = false;
       useiOSPrebuilt = false;
+      useLLVM = final.isGenode;
 
       # Output from uname
       uname = {
         # uname -s
         system = {
-          linux = "Linux";
-          windows = "Windows";
-          darwin = "Darwin";
-          netbsd = "NetBSD";
+          darwin  = "Darwin";
           freebsd = "FreeBSD";
+          genode  = "Genode";
+          linux   = "Linux";
+          netbsd  = "NetBSD";
           openbsd = "OpenBSD";
-          wasi = "Wasi";
+          wasi    = "Wasi";
+          windows = "Windows";
         }.${final.parsed.kernel.name} or null;
 
          # uname -p
