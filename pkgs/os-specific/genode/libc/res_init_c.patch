@@ -1,0 +1,125 @@
+--- src/lib/libc/lib/libc/resolv/res_init.c.old	2019-05-07 11:26:07.854155106 +0200
++++ src/lib/libc/lib/libc/resolv/res_init.c	2019-05-07 11:26:18.499341340 +0200
+@@ -93,18 +93,7 @@
+ #include <unistd.h>
+ #include <netdb.h>
+ 
+-#ifndef HAVE_MD5
+-# include "../dst/md5.h"
+-#else
+-# ifdef SOLARIS2
+-#  include <sys/md5.h>
+-# elif _LIBC
+-# include <md5.h>
+-# endif
+-#endif
+-#ifndef _MD5_H_
+-# define _MD5_H_ 1	/*%< make sure we do not include rsaref md5.h file */
+-#endif
++#include <sys/random.h>
+ 
+ #include "un-namespace.h"
+ 
+@@ -169,6 +158,10 @@
+ 	return (__res_vinit(statp, 0));
+ }
+ 
++
++extern char const *libc_resolv_path;
++
++
+ /*% This function has to be reachable by res_data.c but not publicly. */
+ int
+ __res_vinit(res_state statp, int preinit) {
+@@ -325,7 +318,7 @@
+ 	 line[sizeof(name) - 1] == '\t'))
+ 
+ 	nserv = 0;
+-	if ((fp = fopen(_PATH_RESCONF, "re")) != NULL) {
++	if ((fp = fopen(libc_resolv_path, "re")) != NULL) {
+ 	    struct stat sb;
+ 	    struct timespec now;
+ 
+@@ -339,6 +332,45 @@
+ 	    }
+ 
+ 	    /* read the config file */
++#if 1
++		if (fgets(buf, sizeof(buf), fp) != NULL) {
++			/* read nameservers to query */
++			struct addrinfo hints, *ai;
++			char sbuf[NI_MAXSERV];
++			const size_t minsiz = sizeof(statp->_u._ext.ext->nsaddrs[0]);
++
++			cp = buf;
++			cp[strcspn(cp, "\n")] = '\0';
++
++			if ((*cp != '\0') && (*cp != '\n')) {
++
++				memset(&hints, 0, sizeof(hints));
++				hints.ai_family = PF_UNSPEC;
++				hints.ai_socktype = SOCK_DGRAM;	/*dummy*/
++				hints.ai_flags = AI_NUMERICHOST;
++				sprintf(sbuf, "%u", NAMESERVER_PORT);
++
++				if (getaddrinfo(cp, sbuf, &hints, &ai) == 0 &&
++				    ai->ai_addrlen <= minsiz) {
++					if (statp->_u._ext.ext != NULL) {
++						memcpy(&statp->_u._ext.ext->nsaddrs[nserv],
++						       ai->ai_addr, ai->ai_addrlen);
++					}
++
++					if (ai->ai_addrlen <=
++					    sizeof(statp->nsaddr_list[nserv])) {
++						memcpy(&statp->nsaddr_list[nserv],
++						       ai->ai_addr, ai->ai_addrlen);
++					} else {
++						statp->nsaddr_list[nserv].sin_family = 0;
++					}
++
++					freeaddrinfo(ai);
++					nserv++;
++				}
++			}
++		}
++#else
+ 	    while (fgets(buf, sizeof(buf), fp) != NULL) {
+ 		/* skip comments */
+ 		if (*buf == ';' || *buf == '#')
+@@ -536,6 +568,7 @@
+ 		    continue;
+ 		}
+ 	    }
++#endif /* 1 */
+ 	    if (nserv > 0) 
+ 		statp->nscount = nserv;
+ #ifdef RESOLVSORT
+@@ -777,25 +810,9 @@
+ 
+ u_int
+ res_nrandomid(res_state statp) {
+-	struct timeval now;
+-	u_int16_t u16;
+-	MD5_CTX ctx;
+-	u_char *rnd = statp->_rnd == NULL ? srnd : statp->_rnd;
+-
+-	gettimeofday(&now, NULL);
+-	u16 = (u_int16_t) (now.tv_sec ^ now.tv_usec);
+-	memcpy(rnd + 14, &u16, 2);
+-#ifndef HAVE_MD5
+-	MD5_Init(&ctx);
+-	MD5_Update(&ctx, rnd, 16);
+-	MD5_Final(rnd, &ctx);
+-#else
+-	MD5Init(&ctx);
+-	MD5Update(&ctx, rnd, 16);
+-	MD5Final(rnd, &ctx);
+-#endif
+-	memcpy(&u16, rnd + 14, 2);
+-	return ((u_int) u16);
++	u_int val;
++	getrandom(&val, sizeof(val), 0);
++	return val;
+ }
+ 
+ /*%

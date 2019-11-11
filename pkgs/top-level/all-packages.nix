@@ -11097,6 +11097,9 @@ in
     stdenv = crossLibcStdenv;
   };
 
+  genodeHeaders = callPackage ../os-specific/genode/headers { };
+  genodeLibcCross = callPackage ../os-specific/genode/libc { stdenv = crossLibcStdenv; };
+
   # We can choose:
   libcCrossChooser = name:
     # libc is hackily often used from the previous stage. This `or`
@@ -11113,7 +11116,7 @@ in
     else if name == "libSystem" then targetPackages.darwin.xcode
     else if name == "nblibc" then targetPackages.netbsdCross.libc
     else if name == "wasilibc" then targetPackages.wasilibc or wasilibc
-    else if stdenv.targetPlatform.isGenode then null
+    else if stdenv.targetPlatform.isGenode then targetPackages.genodeLibcCross or genodeLibcCross
     else if stdenv.targetPlatform.isGhcjs then null
     else throw "Unknown libc ${name}";
 

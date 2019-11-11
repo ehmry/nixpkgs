@@ -1,0 +1,8 @@
+Name: libc
+Description: Genode C runtime library
+URL: https://genode.org/
+Version: @version@
+Requires: genode-libports
+Requires.private: vfs
+Cflags: -D__FreeBSD__=12 -D__GENODE__ -fno-builtin-sin -fno-builtin-cos -fno-builtin-sinf -fno-builtin-cosf -I@includedir@
+Libs: -l:libc.lib.so
