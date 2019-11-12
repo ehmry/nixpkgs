@@ -10,7 +10,7 @@
 
       jobs = import ./pkgs/top-level/release.nix { nixpkgs = self; };
 
-      systems = [ "x86_64-genode" ];
+      systems = [ "x86_64-linux" "x86_64-genode" ];
 
       forAllSystems = f: lib.genAttrs systems (system: f system);
 
