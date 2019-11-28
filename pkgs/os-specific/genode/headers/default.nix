@@ -6,7 +6,7 @@
 
 let
   stdenv = stdenvNoCC;
-  version = "19.08";
+  version = "19.11";
   platform = stdenv.targetPlatform;
 in stdenv.mkDerivation {
   pname = platform.system + "-headers";
@@ -14,7 +14,7 @@ in stdenv.mkDerivation {
 
   src = fetchurl {
     url = "https://github.com/genodelabs/genode/archive/${version}.tar.gz";
-    sha256 = "1x5yjb4l36pfg87k389qyq3y3kv5yblzn9r6ikyqgam413bpxabi";
+    sha256 = "0ll7wdglx6c1zx7rdbhxy8gpcfipy22q0agwrf8ch7nk9ngmgm3r";
   };
 
   specs = with platform; []
