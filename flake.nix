@@ -5,22 +5,35 @@
 
   outputs = { self }:
     let
-
       lib = import ./lib;
 
       jobs = import ./pkgs/top-level/release.nix { nixpkgs = self; };
 
-      systems = [ "x86_64-linux" "x86_64-genode" ];
+      localSystems = [ "x86_64-linux" ];
 
-      forAllSystems = f: lib.genAttrs systems (system: f system);
+      forAllSystems = f: lib.genAttrs localSystems (system: f system);
+
+      natives = forAllSystems (system: import ./. { inherit system; });
+
+      crossSystems = [ "x86_64-genode" ];
+
+      forAllCrossSystems = f:
+        with builtins;
+        let
+          f' = localSystem: crossSystem:
+            let system = localSystem + "-" + crossSystem;
+            in {
+              name = system;
+              value = f { inherit system localSystem crossSystem; };
+            };
+          list = lib.lists.crossLists f' [ localSystems crossSystems ];
+        in listToAttrs list;
+
+      crossPairs = forAllCrossSystems ({ system, localSystem, crossSystem }:
+        import ./. { inherit localSystem crossSystem; });
 
     in {
-      inherit lib;
-
-      legacyPackages = forAllSystems (system:
-        import ./. {
-          localSystem = "x86_64-linux";
-          crossSystem = system;
-        });
+      lib = lib // { inherit forAllSystems forAllCrossSystems; };
+      legacyPackages = natives // crossPairs;
     };
 }
