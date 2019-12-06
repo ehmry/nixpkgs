@@ -139,6 +139,8 @@ in
           GDM_X_SERVER_EXTRA_ARGS = toString
             (filter (arg: arg != "-terminate") cfg.xserverArgs);
           XDG_DATA_DIRS = "${cfg.session.desktops}/share/";
+          # Find the mouse
+          XCURSOR_PATH = "~/.icons:${pkgs.gnome3.adwaita-icon-theme}/share/icons";
         } // optionalAttrs (xSessionWrapper != null) {
           # Make GDM use this wrapper before running the session, which runs the
           # configured setupCommands. This relies on a patched GDM which supports
@@ -150,12 +152,6 @@ in
           mkdir -p /run/gdm/.config/pulse
           ln -sf ${pulseConfig} /run/gdm/.config/pulse/default.pa
           chown -R gdm:gdm /run/gdm/.config
-        '' + optionalString config.services.gnome3.gnome-initial-setup.enable ''
-          # Create stamp file for gnome-initial-setup to prevent run.
-          mkdir -p /run/gdm/.config
-          cat - > /run/gdm/.config/gnome-initial-setup-done <<- EOF
-          yes
-          EOF
         '';
       };
 
@@ -165,17 +161,6 @@ in
       "rc-local.service"
       "systemd-machined.service"
       "systemd-user-sessions.service"
-      "getty@tty${gdm.initialVT}.service"
-      "plymouth-quit.service"
-      "plymouth-start.service"
-    ];
-    systemd.services.display-manager.conflicts = [
-       "getty@tty${gdm.initialVT}.service"
-       # TODO: Add "plymouth-quit.service" so GDM can control when plymouth quits.
-       # Currently this breaks switching configurations while using plymouth.
-    ];
-    systemd.services.display-manager.onFailure = [
-      "plymouth-quit.service"
     ];
 
     systemd.services.display-manager.serviceConfig = {
@@ -185,9 +170,6 @@ in
       BusName = "org.gnome.DisplayManager";
       StandardOutput = "syslog";
       StandardError = "inherit";
-      ExecReload = "${pkgs.coreutils}/bin/kill -SIGHUP $MAINPID";
-      KeyringMode = "shared";
-      EnvironmentFile = "-/etc/locale.conf";
     };
 
     systemd.services.display-manager.path = [ pkgs.gnome3.gnome-session ];
@@ -277,7 +259,7 @@ in
         password required       pam_deny.so
 
         session  required       pam_succeed_if.so audit quiet_success user = gdm
-        session  required       pam_env.so conffile=${config.system.build.pamEnvironment} readenv=0
+        session  required       pam_env.so envfile=${config.system.build.pamEnvironment}
         session  optional       ${pkgs.systemd}/lib/security/pam_systemd.so
         session  optional       pam_keyinit.so force revoke
         session  optional       pam_permit.so

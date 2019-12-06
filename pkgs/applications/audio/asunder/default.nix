@@ -12,11 +12,11 @@
 with stdenv.lib;
 
 stdenv.mkDerivation rec {
-  version = "2.9.4";
+  version = "2.9.3";
   pname = "asunder";
   src = fetchurl {
     url = "http://littlesvr.ca/asunder/releases/${pname}-${version}.tar.bz2";
-    sha256 = "1bwc9v9l1f3kqjd7wis6g2sv6ibc618ybh0gsb8mkkfhadp68w30";
+    sha256 = "1630i1df06y840v3fgdf75jxw1s8kwbfn5bhi0686viah0scccw5";
   };
 
   nativeBuildInputs = [ pkgconfig ];

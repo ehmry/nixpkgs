@@ -271,14 +271,14 @@
   <para>
    Nixpkgs can be instantiated with <varname>localSystem</varname> alone, in which case there is no cross-compiling and everything is built by and for that system, or also with <varname>crossSystem</varname>, in which case packages run on the latter, but all building happens on the former. Both parameters take the same schema as the 3 (build, host, and target) platforms defined in the previous section. As mentioned above, <literal>lib.systems.examples</literal> has some platforms which are used as arguments for these parameters in practice. You can use them programmatically, or on the command line:
 <programlisting>
-nix-build '&lt;nixpkgs&gt;' --arg crossSystem '(import &lt;nixpkgs/lib&gt;).systems.examples.fooBarBaz' -A whatever</programlisting>
+nix-build &lt;nixpkgs&gt; --arg crossSystem '(import &lt;nixpkgs/lib&gt;).systems.examples.fooBarBaz' -A whatever</programlisting>
   </para>
 
   <note>
    <para>
     Eventually we would like to make these platform examples an unnecessary convenience so that
 <programlisting>
-nix-build '&lt;nixpkgs&gt;' --arg crossSystem '{ config = "&lt;arch&gt;-&lt;os&gt;-&lt;vendor&gt;-&lt;abi&gt;"; }' -A whatever</programlisting>
+nix-build &lt;nixpkgs&gt; --arg crossSystem '{ config = "&lt;arch&gt;-&lt;os&gt;-&lt;vendor&gt;-&lt;abi&gt;"; }' -A whatever</programlisting>
     works in the vast majority of cases. The problem today is dependencies on other sorts of configuration which aren't given proper defaults. We rely on the examples to crudely to set those configuration parameters in some vaguely sane manner on the users behalf. Issue <link xlink:href="https://github.com/NixOS/nixpkgs/issues/34274">#34274</link> tracks this inconvenience along with its root cause in crufty configuration options.
    </para>
   </note>
@@ -348,12 +348,12 @@ nix-build '&lt;nixpkgs&gt;' --arg crossSystem '{ config = "&lt;arch&gt;-&lt;os&g
       </para>
      </listitem>
     </orderedlist>
-    In each stage, <varname>pkgsBuildHost</varname> refers the the previous stage, <varname>pkgsBuildBuild</varname> refers to the one before that, and <varname>pkgsHostTarget</varname> refers to the current one, and <varname>pkgsTargetTarget</varname> refers to the next one. When there is no previous or next stage, they instead refer to the current stage. Note how all the invariants regarding the mapping between dependency and depending packages' build host and target platforms are preserved. <varname>pkgsBuildTarget</varname> and <varname>pkgsHostHost</varname> are more complex in that the stage fitting the requirements isn't always a fixed chain of "prevs" and "nexts" away (modulo the "saturating" self-references at the ends). We just special case each instead. All the primary edges are implemented is in <filename>pkgs/stdenv/booter.nix</filename>, and secondarily aliases in <filename>pkgs/top-level/stage.nix</filename>.
+    In each stage, <varname>pkgsBuildHost</varname> refers to the previous stage, <varname>pkgsBuildBuild</varname> refers to the one before that, and <varname>pkgsHostTarget</varname> refers to the current one, and <varname>pkgsTargetTarget</varname> refers to the next one. When there is no previous or next stage, they instead refer to the current stage. Note how all the invariants regarding the mapping between dependency and depending packages' build host and target platforms are preserved. <varname>pkgsBuildTarget</varname> and <varname>pkgsHostHost</varname> are more complex in that the stage fitting the requirements isn't always a fixed chain of "prevs" and "nexts" away (modulo the "saturating" self-references at the ends). We just special case each instead. All the primary edges are implemented is in <filename>pkgs/stdenv/booter.nix</filename>, and secondarily aliases in <filename>pkgs/top-level/stage.nix</filename>.
    </para>
 
    <note>
     <para>
-     Note the native stages are bootstrapped in legacy ways that predate the current cross implementation. This is why the the bootstrapping stages leading up to the final stages are ignored inthe previous paragraph.
+     Note the native stages are bootstrapped in legacy ways that predate the current cross implementation. This is why the bootstrapping stages leading up to the final stages are ignored inthe previous paragraph.
     </para>
    </note>
 

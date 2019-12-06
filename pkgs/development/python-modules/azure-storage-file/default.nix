@@ -26,7 +26,7 @@ buildPythonPackage rec {
 
   meta = with lib; {
     description = "Client library for Microsoft Azure Storage services containing the file service APIs";
-    homepage = "https://github.com/Azure/azure-sdk-for-python";
+    homepage = https://github.com/Azure/azure-storage-python/tree/master/azure-storage-file;
     license = licenses.mit;
     maintainers = with maintainers; [ cmcdragonkai ];
   };

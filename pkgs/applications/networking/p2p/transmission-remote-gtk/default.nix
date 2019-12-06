@@ -1,5 +1,6 @@
 { stdenv, autoconf, automake, libtool, wrapGAppsHook, fetchFromGitHub, pkgconfig
-, intltool, gtk3, json-glib, curl, glib, autoconf-archive, appstream-glib }:
+, intltool, gtk3, json-glib, curl, glib, autoconf-archive, appstream-glib
+, hicolor-icon-theme }:
 
 
 stdenv.mkDerivation rec {
@@ -21,7 +22,7 @@ stdenv.mkDerivation rec {
     appstream-glib
   ];
 
-  buildInputs = [ gtk3 json-glib curl glib ];
+  buildInputs = [ gtk3 json-glib curl glib hicolor-icon-theme ];
 
   doCheck = false; # fails with style validation error
 

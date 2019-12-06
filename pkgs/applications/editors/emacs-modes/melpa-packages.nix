@@ -68,6 +68,10 @@ env NIXPKGS_ALLOW_BROKEN=1 nix-instantiate --show-trace ../../../../ -A emacsPac
           inherit (self.melpaPackages) easy-kill;
         };
 
+        elpy = super.elpy.overrideAttrs(old: {
+          propagatedUserEnvPkgs = old.propagatedUserEnvPkgs ++ [ external.elpy ];
+        });
+
         emacsql-sqlite = super.emacsql-sqlite.overrideAttrs(old: {
           buildInputs = old.buildInputs ++ [ pkgs.sqlite ];
 
@@ -83,15 +87,6 @@ env NIXPKGS_ALLOW_BROKEN=1 nix-instantiate --show-trace ../../../../ -A emacsPac
           '';
 
           stripDebugList = [ "share" ];
-        });
-
-        # https://github.com/syl20bnr/evil-escape/pull/86
-        evil-escape = super.evil-escape.overrideAttrs (attrs: {
-          postPatch = ''
-            substituteInPlace evil-escape.el \
-              --replace ' ;;; evil' ';;; evil'
-          '';
-          packageRequires = with self; [ evil ];
         });
 
         evil-magit = super.evil-magit.overrideAttrs (attrs: {

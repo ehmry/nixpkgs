@@ -31,7 +31,7 @@ buildPythonPackage rec {
 
   meta = with lib; {
     description = "This is the Microsoft Azure common code";
-    homepage = "https://github.com/Azure/azure-sdk-for-python";
+    homepage = https://github.com/Azure/azure-sdk-for-python/tree/master/azure-common;
     license = licenses.mit;
     maintainers = with maintainers; [ olcai mwilsoninsight ];
   };

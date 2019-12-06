@@ -11,6 +11,7 @@
 , appstream-glib
 , desktop-file-utils
 , totem-pl-parser
+, hicolor-icon-theme
 , gobject-introspection
 , wrapGAppsHook
 , lastFMSupport ? true
@@ -50,6 +51,7 @@ python3.pkgs.buildPythonApplication rec  {
     gst-plugins-ugly
     gstreamer
     gtk3
+    hicolor-icon-theme
     libsoup
     totem-pl-parser
   ] ++ lib.optional lastFMSupport libsecret;

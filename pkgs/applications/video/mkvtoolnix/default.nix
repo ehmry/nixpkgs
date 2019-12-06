@@ -50,8 +50,6 @@ stdenv.mkDerivation rec {
     (enableFeature withGUI "qt")
   ];
 
-  CXXFLAGS = optional stdenv.cc.isClang "-std=c++14";
-
   dontWrapQtApps = true;
   postFixup = optionalString withGUI ''
     wrapQtApp $out/bin/mkvtoolnix-gui

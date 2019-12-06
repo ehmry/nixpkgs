@@ -17,14 +17,14 @@ let
       };
   };
 in buildGoPackage rec {
-  version = "1.65.1";
+  version = "1.72.1";
   pname = "gitaly";
 
   src = fetchFromGitLab {
     owner = "gitlab-org";
     repo = "gitaly";
     rev = "v${version}";
-    sha256 = "1a39i723na2xk4363a7v48ba23vi04qpg0119dw09g13m0k5hjc3";
+    sha256 = "0gnhw7p8fgy3w15828qjgkkxcd4dg7gf1hpanc3xqawb8jqpfc91";
   };
 
   goPackagePath = "gitlab.com/gitlab-org/gitaly";
@@ -55,7 +55,7 @@ in buildGoPackage rec {
   meta = with stdenv.lib; {
     homepage = https://gitlab.com/gitlab-org/gitaly;
     description = "A Git RPC service for handling all the git calls made by GitLab";
-    platforms = platforms.unix;
+    platforms = platforms.linux;
     maintainers = with maintainers; [ roblabla globin fpletz ];
     license = licenses.mit;
   };

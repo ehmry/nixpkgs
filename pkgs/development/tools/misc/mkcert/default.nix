@@ -1,6 +1,6 @@
-{ lib, buildGoPackage, fetchFromGitHub }:
+{ lib, buildGoModule, fetchFromGitHub }:
 
-buildGoPackage rec {
+buildGoModule rec {
   pname = "mkcert";
   version = "1.4.0";
 
@@ -11,7 +11,7 @@ buildGoPackage rec {
     sha256 = "0xcmvzh5lq8vs3b0f1zw645fxdr8471v7prl1656q02v38f58ly7";
   };
 
-  goPackagePath = "github.com/FiloSottile/mkcert";
+  modSha256 = "0an12l15a82mks6gipczdpcf2vklk14wjjnk0ccl3kdjwiw7f4wd";
 
   meta = with lib; {
     homepage = https://github.com/FiloSottile/mkcert;

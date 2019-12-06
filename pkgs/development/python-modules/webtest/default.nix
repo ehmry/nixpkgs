@@ -30,9 +30,6 @@ buildPythonPackage rec {
 
   checkInputs = [ nose mock PasteDeploy wsgiproxy2 pyquery ];
 
-  # Some of the tests use localhost networking.
-  __darwinAllowLocalNetworking = true;
-
   meta = with stdenv.lib; {
     description = "Helper to test WSGI applications";
     homepage = https://webtest.readthedocs.org/en/latest/;

@@ -24,8 +24,6 @@ let
 
   darcsToGit = callPackage ./darcs-to-git { };
 
-  delta = callPackage ./delta { };
-
   diff-so-fancy = callPackage ./diff-so-fancy { };
 
   ghq = callPackage ./ghq { };
@@ -73,8 +71,6 @@ let
   };
 
   git-annex-remote-rclone = callPackage ./git-annex-remote-rclone { };
-
-  git-annex-utils = callPackage ./git-annex-utils { };
 
   git-bug = callPackage ./git-bug { };
 
@@ -150,8 +146,6 @@ let
   hubUnstable = throw "use gitAndTools.hub instead";
 
   lab = callPackage ./lab { };
-
-  lefthook = callPackage ./lefthook { };
 
   pre-commit = pkgs.python3Packages.toPythonApplication pkgs.python3Packages.pre-commit;
 

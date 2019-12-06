@@ -1,7 +1,6 @@
-{ stdenv, fetchFromGitHub, meson, pkgconfig, ninja, docutils, makeWrapper
+{ stdenv, fetchFromGitHub, meson, pkgconfig, ninja, docutils
 , fuse3, glib
 , which, python3Packages
-, openssh
 }:
 
 stdenv.mkDerivation rec {
@@ -15,7 +14,7 @@ stdenv.mkDerivation rec {
     sha256 = "0gvk8snivpi2sjidjnd9ypc66ny7lr0z9v4swl56rwjv539dkbx2";
   };
 
-  nativeBuildInputs = [ meson pkgconfig ninja docutils makeWrapper ];
+  nativeBuildInputs = [ meson pkgconfig ninja docutils ];
   buildInputs = [ fuse3 glib ];
   checkInputs = [ which python3Packages.pytest ];
 
@@ -26,7 +25,6 @@ stdenv.mkDerivation rec {
   postInstall = ''
     mkdir -p $out/sbin
     ln -sf $out/bin/sshfs $out/sbin/mount.sshfs
-    wrapProgram $out/bin/sshfs --prefix PATH : "${openssh}/bin"
   '';
 
   #doCheck = true;

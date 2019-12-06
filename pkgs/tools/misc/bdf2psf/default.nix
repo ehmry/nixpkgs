@@ -17,7 +17,8 @@ stdenv.mkDerivation rec {
   unpackPhase = "dpkg-deb -x $src .";
   installPhase = "
     substituteInPlace usr/bin/bdf2psf --replace /usr/bin/perl ${perl}/bin/perl
-    mv usr $out
+    mv usr/bin .
+    cp -r . $out
   ";
 
   meta = with stdenv.lib; {

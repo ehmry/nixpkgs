@@ -1,5 +1,6 @@
 { lib
 , buildPythonPackage
+, python
 , fetchPypi
 , msrest
 , msrestazure
@@ -26,12 +27,17 @@ buildPythonPackage rec {
     azure-mgmt-nspkg
   ];
 
+  postInstall = lib.optionalString isPy3k ''
+    rm -f $out/${python.sitePackages}/azure/__init__.py
+    rm -f $out/${python.sitePackages}/azure/mgmt/__init__.py
+  '';
+
   # has no tests
   doCheck = false;
 
   meta = with lib; {
     description = "This is the Microsoft Azure Application Insights Management Client Library";
-    homepage = "https://github.com/Azure/azure-sdk-for-python";
+    homepage = https://github.com/Azure/sdk-for-python/tree/master/azure-mgmt-applicationinsights;
     license = licenses.mit;
     maintainers = with maintainers; [ mwilsoninsight ];
   };

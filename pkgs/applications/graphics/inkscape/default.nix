@@ -2,7 +2,7 @@
 , libpng, zlib, popt, boehmgc, libxml2, libxslt, glib, gtkmm2
 , glibmm, libsigcxx, lcms, boost, gettext, makeWrapper
 , gsl, python2, poppler, imagemagick, libwpg, librevenge
-, libvisio, libcdr, libexif, potrace, cmake
+, libvisio, libcdr, libexif, potrace, cmake, hicolor-icon-theme
 , librsvg, wrapGAppsHook
 }:
 
@@ -47,7 +47,7 @@ stdenv.mkDerivation rec {
     libXft libpng zlib popt boehmgc
     libxml2 libxslt glib gtkmm2 glibmm libsigcxx lcms boost gettext
     gsl poppler imagemagick libwpg librevenge
-    libvisio libcdr libexif potrace
+    libvisio libcdr libexif potrace hicolor-icon-theme
 
     librsvg # for loading icons
 

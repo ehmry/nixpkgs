@@ -1,30 +1,28 @@
 { stdenv, fetchurl, pkgconfig, gtk3, vala, enchant2, wrapGAppsHook, meson, ninja
 , desktop-file-utils, gnome-online-accounts, gsettings-desktop-schemas, adwaita-icon-theme
-, libcanberra-gtk3, libsecret, gmime, isocodes, libxml2, gettext
+, libnotify, libcanberra-gtk3, libsecret, gmime, isocodes, libxml2, gettext
 , sqlite, gcr, json-glib, itstool, libgee, gnome3, webkitgtk, python3
-, xvfb_run, dbus, shared-mime-info, libunwind, libunity, folks, glib-networking
-, gobject-introspection, gspell, appstream-glib, libytnef, libhandy }:
+, xvfb_run, dbus, shared-mime-info, libunwind, libunity, folks, glib-networking }:
 
 stdenv.mkDerivation rec {
   pname = "geary";
-  version = "3.34.1";
+  version = "3.32.2";
 
   src = fetchurl {
     url = "mirror://gnome/sources/${pname}/${stdenv.lib.versions.majorMinor version}/${pname}-${version}.tar.xz";
-    sha256 = "1bx57g8199pcqh1p90dlnca2g1kpyrifr6g8m1rdjmpm2a1r993v";
+    sha256 = "0sg53zq81v28hdqiy5d048skwfgsa8ck0z7ywsagdh7iaqin68gq";
   };
 
   nativeBuildInputs = [
     desktop-file-utils gettext itstool libxml2 meson ninja
-    pkgconfig vala wrapGAppsHook python3 appstream-glib
-    gobject-introspection
+    pkgconfig vala wrapGAppsHook python3
   ];
 
   buildInputs = [
     adwaita-icon-theme enchant2 gcr gmime gnome-online-accounts
     gsettings-desktop-schemas gtk3 isocodes json-glib libcanberra-gtk3
-    libgee libsecret sqlite webkitgtk glib-networking
-    libunwind libunity folks gspell libytnef libhandy
+    libgee libnotify libsecret sqlite webkitgtk glib-networking
+    libunwind libunity folks
   ];
 
   checkInputs = [ xvfb_run dbus ];
@@ -34,8 +32,8 @@ stdenv.mkDerivation rec {
   ];
 
   postPatch = ''
-    chmod +x build-aux/post_install.py build-aux/git_version.py
-    patchShebangs build-aux/post_install.py build-aux/git_version.py
+    chmod +x build-aux/post_install.py
+    patchShebangs build-aux/post_install.py
 
     chmod +x desktop/geary-attach
   '';

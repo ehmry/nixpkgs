@@ -25,7 +25,6 @@ in
   atd = handleTest ./atd.nix {};
   automysqlbackup = handleTest ./automysqlbackup.nix {};
   avahi = handleTest ./avahi.nix {};
-  babeld = handleTest ./babeld.nix {};
   bcachefs = handleTestOn ["x86_64-linux"] ./bcachefs.nix {}; # linux-4.18.2018.10.12 is unsupported on aarch64
   beanstalkd = handleTest ./beanstalkd.nix {};
   beegfs = handleTestOn ["x86_64-linux"] ./beegfs.nix {}; # beegfs is unsupported on aarch64
@@ -36,7 +35,6 @@ in
   boot-stage1 = handleTest ./boot-stage1.nix {};
   borgbackup = handleTest ./borgbackup.nix {};
   buildbot = handleTest ./buildbot.nix {};
-  caddy = handleTest ./caddy.nix {};
   cadvisor = handleTestOn ["x86_64-linux"] ./cadvisor.nix {};
   cassandra = handleTest ./cassandra.nix {};
   ceph = handleTestOn ["x86_64-linux"] ./ceph.nix {};
@@ -155,8 +153,11 @@ in
   login = handleTest ./login.nix {};
   loki = handleTest ./loki.nix {};
   #logstash = handleTest ./logstash.nix {};
+  lorri = handleTest ./lorri/default.nix {};
+  magnetico = handleTest ./magnetico.nix {};
   mailcatcher = handleTest ./mailcatcher.nix {};
   mathics = handleTest ./mathics.nix {};
+  matomo = handleTest ./matomo.nix {};
   matrix-synapse = handleTest ./matrix-synapse.nix {};
   mediawiki = handleTest ./mediawiki.nix {};
   memcached = handleTest ./memcached.nix {};
@@ -164,7 +165,6 @@ in
   metabase = handleTest ./metabase.nix {};
   miniflux = handleTest ./miniflux.nix {};
   minio = handleTest ./minio.nix {};
-  minidlna = handleTest ./minidlna.nix {};
   misc = handleTest ./misc.nix {};
   mongodb = handleTest ./mongodb.nix {};
   moodle = handleTest ./moodle.nix {};
@@ -207,7 +207,6 @@ in
   # openstack-image-userdata doesn't work in a sandbox as the simulated openstack instance needs network access
   #openstack-image-userdata = (handleTestOn ["x86_64-linux"] ./openstack-image.nix {}).userdata or {};
   openstack-image-metadata = (handleTestOn ["x86_64-linux"] ./openstack-image.nix {}).metadata or {};
-  os-prober = handleTestOn ["x86_64-linux"] ./os-prober.nix {};
   osquery = handleTest ./osquery.nix {};
   osrm-backend = handleTest ./osrm-backend.nix {};
   ostree = handleTest ./ostree.nix {};
@@ -227,7 +226,6 @@ in
   postgresql = handleTest ./postgresql.nix {};
   postgresql-wal-receiver = handleTest ./postgresql-wal-receiver.nix {};
   powerdns = handleTest ./powerdns.nix {};
-  pppd = handleTest ./pppd.nix {};
   predictable-interface-names = handleTest ./predictable-interface-names.nix {};
   printing = handleTest ./printing.nix {};
   prometheus = handleTest ./prometheus.nix {};

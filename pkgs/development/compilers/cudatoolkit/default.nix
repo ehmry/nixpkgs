@@ -180,7 +180,9 @@ let
       '';
       passthru = {
         cc = gcc;
-        majorVersion = lib.versions.majorMinor version;
+        majorVersion =
+          let versionParts = lib.splitString "." version;
+          in "${lib.elemAt versionParts 0}.${lib.elemAt versionParts 1}";
       };
 
       meta = with stdenv.lib; {

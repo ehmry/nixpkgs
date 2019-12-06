@@ -19,6 +19,7 @@ stdenv.mkDerivation rec {
     sandybridge    = [ "--disable-clz" ];
     ivybridge      = [ "--disable-clz" ];
   }.${stdenv.hostPlatform.platform.gcc.arch or "default"} or [];
+  buildInputs = [];
   installPhase = ''
     mkdir -p "$out"/{bin,share/doc/nauty} "$dev"/{lib,include/nauty}
 

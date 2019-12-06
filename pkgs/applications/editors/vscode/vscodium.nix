@@ -11,19 +11,13 @@ let
   archive_fmt = if system == "x86_64-darwin" then "zip" else "tar.gz";
 
   sha256 = {
-    x86_64-linux = "013jhmc29angqh9qb8jj0jqk4whqb59id61njm8gwz977sdgpf9l";
-    x86_64-darwin = "09jfii132cib1kn3bghwchdlvi4cfjqz5hvw6j5gr53h7j35k37j";
-  }.${system};
-
-  sourceRoot = {
-    x86_64-linux = ".";
-    x86_64-darwin = "";
+    x86_64-linux = "1vhrfz36ay67laa5159jcnxyl4prgm8v1mp6anv1s7bppazigg2n";
+    x86_64-darwin = "0cxsl0qpk223khndfwwgxl8az4rz4ap657yrkvws9bh8k4vv473h";
   }.${system};
 in
   callPackage ./generic.nix rec {
-    inherit sourceRoot;
 
-    version = "1.39.2";
+    version = "1.39.1";
     pname = "vscodium";
 
     executableName = "codium";
@@ -34,6 +28,8 @@ in
       url = "https://github.com/VSCodium/vscodium/releases/download/${version}/VSCodium-${plat}-${version}.${archive_fmt}";
       inherit sha256;
     };
+
+    sourceRoot = ".";
 
     meta = with stdenv.lib; {
       description = ''

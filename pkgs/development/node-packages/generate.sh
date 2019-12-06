@@ -1,6 +1,5 @@
 #!/usr/bin/env nix-shell
-#! nix-shell -I nixpkgs=../../.. -i bash -p nodePackages.node2nix
-# NOTE: Script must be run from the node-packages directory
+#! nix-shell -i bash -p nodePackages.node2nix
 
 set -eu -o pipefail
 

@@ -4,24 +4,16 @@ with python3Packages;
 
 buildPythonApplication rec {
   pname = "reuse";
-  version = "0.5.0";
+  version = "0.4.1";
 
   src = fetchFromGitHub {
     owner = "fsfe";
     repo = "reuse-tool";
     rev = "v${version}";
-    sha256 = "1w17g6jvs715rjc93nnnqnfdphijq4ymj9jjkr3ccc286ywvn3ih";
+    sha256 = "0gwipwikhxsk0p8wvdl90xm7chfi2jywb1namzznyymifl1vsbgh";
   };
 
-  propagatedBuildInputs = [
-    binaryornot
-    boolean-py
-    debian
-    jinja2
-    license-expression
-    requests
-    setuptools
-  ];
+  propagatedBuildInputs = [ debian license-expression requests ];
 
   checkInputs = [ pytest ];
 

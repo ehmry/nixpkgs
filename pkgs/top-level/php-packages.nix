@@ -262,12 +262,12 @@ let
   };
 
   php-cs-fixer = mkDerivation rec {
-    version = "2.15.3";
+    version = "2.15.1";
     pname = "php-cs-fixer";
 
     src = pkgs.fetchurl {
       url = "https://github.com/FriendsOfPHP/PHP-CS-Fixer/releases/download/v${version}/php-cs-fixer.phar";
-      sha256 = "0hbc9y3676dd0841llgp1g7bhklfxi1cw47dcww0qmk69gjfv54c";
+      sha256 = "0qbqdki6vj8bgj5m2k4mi0qgj17r6s2v2q7yc30hhgvksf7vamlc";
     };
 
     phases = [ "installPhase" ];
@@ -392,12 +392,12 @@ let
   };
 
   phpstan = mkDerivation rec {
-    version = "0.11.16";
+    version = "0.11.15";
     pname = "phpstan";
 
     src = pkgs.fetchurl {
       url = "https://github.com/phpstan/phpstan/releases/download/${version}/phpstan.phar";
-      sha256 = "0c2417kwkj3nf1zya1flw7g1mz0dwhh27hjs3wz04b0kgnv4syzs";
+      sha256 = "1fa3bq5k548jpyph2rxkgnarblyy5f1m55awjcps8mjqbw9r6439";
     };
 
     phases = [ "installPhase" ];
@@ -483,32 +483,6 @@ let
       '';
       license = licenses.bsd3;
       homepage = "https://developers.google.com/protocol-buffers/";
-    };
-  };
-
-  psalm = mkDerivation rec {
-    version = "3.5.3";
-    pname = "psalm";
-
-    src = pkgs.fetchurl {
-      url = "https://github.com/vimeo/psalm/releases/download/${version}/psalm.phar";
-      sha256 = "1n5pfzln82wzk1qa40c436lhbin1g06lfdk89q720yzrrs07r8sw";
-    };
-
-    phases = [ "installPhase" ];
-    nativeBuildInputs = [ pkgs.makeWrapper ];
-
-    installPhase = ''
-      mkdir -p $out/bin
-      install -D $src $out/libexec/psalm/psalm.phar
-      makeWrapper ${php}/bin/php $out/bin/psalm \
-        --add-flags "$out/libexec/psalm/psalm.phar"
-    '';
-
-    meta = with pkgs.lib; {
-      description = "A static analysis tool for finding errors in PHP applications";
-      license = licenses.mit;
-      homepage = https://github.com/vimeo/psalm;
     };
   };
 

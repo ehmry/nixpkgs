@@ -1,23 +1,17 @@
-{ stdenv, fetchFromGitHub, gtk3, hicolor-icon-theme }:
+{ stdenv, fetchFromGitHub, gtk3 }:
 
 stdenv.mkDerivation rec {
   pname = "papirus-icon-theme";
-  version = "20191009";
+  version = "20190802";
 
   src = fetchFromGitHub {
     owner = "PapirusDevelopmentTeam";
     repo = pname;
     rev = version;
-    sha256 = "1ljbaq0c6rhvfwj5q2kvd6rxbjykb0sbgcpjrxrzpdy08zr1kdvd";
+    sha256 = "1i6nh1vy2cjqh4fw1mzq5v4ah613ghf018g8w0npxhj9qi3pyjm5";
   };
 
   nativeBuildInputs = [ gtk3 ];
-
-  propagatedBuildInputs = [
-    hicolor-icon-theme
-  ];
-
-  dontDropIconThemeCache = true;
 
   installPhase = ''
      mkdir -p $out/share/icons

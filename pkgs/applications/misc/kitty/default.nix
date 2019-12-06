@@ -79,9 +79,9 @@ buildPythonApplication rec {
   '';
 
   buildPhase = if stdenv.isDarwin then ''
-    make app
+    ${python.interpreter} setup.py kitty.app --update-check-interval=0
   '' else ''
-    ${python.interpreter} setup.py linux-package
+    ${python.interpreter} setup.py linux-package --update-check-interval=0
   '';
 
   installPhase = ''
@@ -89,7 +89,7 @@ buildPythonApplication rec {
     mkdir -p $out
     ${if stdenv.isDarwin then ''
     mkdir "$out/bin"
-    ln -s ../Applications/kitty.app/Contents/MacOS/kitty "$out/bin/kitty"
+    ln -s ../Applications/kitty.app/Contents/MacOS/kitty-deref-symlink "$out/bin/kitty"
     mkdir "$out/Applications"
     cp -r kitty.app "$out/Applications/kitty.app"
     '' else ''

@@ -14,10 +14,9 @@ lib.makeScope pkgs.newScope (self: with self; {
   */
   removePackagesByName = packages: packagesToRemove:
     let
-      pkgName = drv: (builtins.parseDrvName drv.name).name;
-      namesToRemove = map pkgName packagesToRemove;
+      namesToRemove = map lib.getName packagesToRemove;
     in
-      lib.filter (x: !(builtins.elem (pkgName x) namesToRemove)) packages;
+      lib.filter (x: !(builtins.elem (lib.getName x) namesToRemove)) packages;
 
   maintainers = with pkgs.lib.maintainers; [ lethalman jtojnar hedning worldofpeace ];
 
@@ -78,8 +77,6 @@ lib.makeScope pkgs.newScope (self: with self; {
   gnome-keyring = callPackage ./core/gnome-keyring { };
 
   libgnome-keyring = callPackage ./core/libgnome-keyring { };
-
-  gnome-initial-setup = callPackage ./core/gnome-initial-setup { };
 
   gnome-online-miners = callPackage ./core/gnome-online-miners { };
 
@@ -217,6 +214,8 @@ lib.makeScope pkgs.newScope (self: with self; {
 
   gnome-weather = callPackage ./apps/gnome-weather { };
 
+  nautilus-sendto = callPackage ./apps/nautilus-sendto { };
+
   polari = callPackage ./apps/polari { };
 
   seahorse = callPackage ./apps/seahorse { };
@@ -338,7 +337,7 @@ lib.makeScope pkgs.newScope (self: with self; {
   inherit (pkgs) atk glib gobject-introspection gspell webkitgtk gtk3 gtkmm3
       libgtop libgudev libhttpseverywhere librsvg libsecret gdk_pixbuf gtksourceview gtksourceviewmm gtksourceview4
       easytag meld orca rhythmbox shotwell gnome-usage
-      clutter clutter-gst clutter-gtk cogl gtk-vnc libdazzle libgda libgit2-glib libgxps libgdata libgepub libcroco libpeas libgee geocode-glib libgweather librest libzapojit libmediaart gfbgraph gexiv2 folks totem-pl-parser gcr gsound libgnomekbd vte vte_290 gnome-menus gdl;
+      clutter clutter-gst clutter-gtk cogl gtk-vnc libdazzle libgda libgit2-glib libgxps libgdata libgepub libcroco libpeas libgee geocode-glib libgweather librest libzapojit libmediaart gfbgraph gexiv2 folks totem-pl-parser gcr gsound libgnomekbd vte vte_290 vte-ng gnome-menus gdl;
   inherit (pkgs) gsettings-desktop-schemas; # added 2019-04-16
   inherit (pkgs) gnome-video-effects; # added 2019-08-19
   inherit (pkgs) gnome-online-accounts grilo grilo-plugins tracker tracker-miners gnome-photos; # added 2019-08-23
@@ -356,6 +355,4 @@ lib.makeScope pkgs.newScope (self: with self; {
   corePackages = throw "deprecated 2019-08-25: please use `services.gnome3.core-shell.enable`";
   optionalPackages = throw "deprecated 2019-08-25: please use `services.gnome3.core-utilities.enable`";
   gamesPackages = throw "deprecated 2019-08-25: please use `services.gnome3.games.enable`";
-
-  nautilus-sendto = throw "deprecated 2019-09-17: abandoned";
 })

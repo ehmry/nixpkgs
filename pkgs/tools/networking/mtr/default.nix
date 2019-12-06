@@ -1,11 +1,11 @@
-{ stdenv, lib, fetchFromGitHub, autoreconfHook, pkgconfig
+{ stdenv, fetchFromGitHub, autoreconfHook, pkgconfig
 , libcap, ncurses
 , withGtk ? false, gtk2 ? null }:
 
 assert withGtk -> gtk2 != null;
 
 stdenv.mkDerivation rec {
-  pname = "mtr${lib.optionalString withGtk "-gui"}";
+  pname = "mtr";
   version = "0.93";
 
   src = fetchFromGitHub {

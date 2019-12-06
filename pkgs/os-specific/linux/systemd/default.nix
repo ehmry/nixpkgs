@@ -3,7 +3,7 @@
 , glib, kbd, libxslt, coreutils, libgcrypt, libgpgerror, libidn2, libapparmor
 , audit, lz4, bzip2, libmicrohttpd, pcre2
 , linuxHeaders ? stdenv.cc.libc.linuxHeaders
-, iptables, gnu-efi, bashInteractive
+, iptables, gnu-efi
 , gettext, docbook_xsl, docbook_xml_dtd_42, docbook_xml_dtd_45
 , ninja, meson, python3Packages, glibcLocales
 , patchelf
@@ -15,7 +15,10 @@
 , withKexectools ? lib.any (lib.meta.platformMatch stdenv.hostPlatform) kexectools.meta.platforms, kexectools
 }:
 
-stdenv.mkDerivation {
+let
+  pythonLxmlEnv = buildPackages.python3Packages.python.withPackages ( ps: with ps; [ python3Packages.lxml ]);
+
+in stdenv.mkDerivation {
   version = "243";
   pname = "systemd";
 
@@ -24,8 +27,8 @@ stdenv.mkDerivation {
   src = fetchFromGitHub {
     owner = "NixOS";
     repo = "systemd";
-    rev = "ccec67cab6c0fda85a1762eee7aeea422a0dc15e";
-    sha256 = "12nq2ah33amhyfma464a4ssf90wh2ai8c7w55j381cks8jliny40";
+    rev = "d25cf413c6bff1b5a9d216a8830e3a90c9cad1de";
+    sha256 = "0ilvrnh3m7g0yflxl16fk52gkb1z0fwwk9ba5gs4005nzpl0c7i0";
   };
 
   outputs = [ "out" "lib" "man" "dev" ];
@@ -53,7 +56,7 @@ stdenv.mkDerivation {
   #dontAddPrefix = true;
 
   mesonFlags = [
-    "-Ddbuspolicydir=${placeholder "out"}/share/dbus-1/system.d"
+    "-Ddbuspolicydir=${placeholder "out"}/etc/dbus-1/system.d"
     "-Ddbussessionservicedir=${placeholder "out"}/share/dbus-1/services"
     "-Ddbussystemservicedir=${placeholder "out"}/share/dbus-1/system-services"
     "-Dpamconfdir=${placeholder "out"}/etc/pam.d"
@@ -64,7 +67,6 @@ stdenv.mkDerivation {
     "-Dloadkeys-path=${kbd}/bin/loadkeys"
     "-Dsetfont-path=${kbd}/bin/setfont"
     "-Dtty-gid=3" # tty in NixOS has gid 3
-    "-Ddebug-shell=${bashInteractive}/bin/bash"
     # while we do not run tests we should also not build them. Removes about 600 targets
     "-Dtests=false"
     "-Dlz4=true"

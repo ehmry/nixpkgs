@@ -1,5 +1,5 @@
 { stdenv, fetchFromGitHub, cmake, boost, pkgconfig, doxygen, qt48Full, libharu
-, pango, fcgi, firebird, libmysqlclient, postgresql, graphicsmagick, glew, openssl
+, pango, fcgi, firebird, mysql, postgresql, graphicsmagick, glew, openssl
 , pcre, harfbuzz
 }:
 
@@ -22,21 +22,18 @@ let
       nativeBuildInputs = [ pkgconfig ];
       buildInputs = [
         cmake boost doxygen qt48Full libharu
-        pango fcgi firebird libmysqlclient postgresql graphicsmagick glew
+        pango fcgi firebird mysql.connector-c postgresql graphicsmagick glew
         openssl pcre
       ];
 
       cmakeFlags = [
+        "-DWT_WRASTERIMAGE_IMPLEMENTATION=GraphicsMagick"
         "-DWT_CPP_11_MODE=-std=c++11"
+        "-DGM_PREFIX=${graphicsmagick}"
+        "-DMYSQL_PREFIX=${mysql.connector-c}"
         "-DHARFBUZZ_INCLUDE_DIR=${harfbuzz.dev}/include"
         "--no-warn-unused-cli"
-      ]
-      ++ stdenv.lib.optionals (graphicsmagick != null) [
-        "-DWT_WRASTERIMAGE_IMPLEMENTATION=GraphicsMagick"
-        "-DGM_PREFIX=${graphicsmagick}"
-      ]
-      ++ stdenv.lib.optional (libmysqlclient != null)
-        "-DMYSQL_PREFIX=${libmysqlclient}";
+      ];
 
       meta = with stdenv.lib; {
         homepage = "https://www.webtoolkit.eu/wt";

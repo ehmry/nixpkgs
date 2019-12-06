@@ -7,15 +7,13 @@
 #   3) used by `google-cloud-sdk` only on GCE guests
 #
 
-{ stdenv, lib, fetchurl, makeWrapper, python, with-gce ? false }:
+{ stdenv, lib, fetchurl, makeWrapper, python, cffi, cryptography, pyopenssl,
+  crcmod, google-compute-engine, with-gce ? false }:
 
 let
-  pythonEnv = python.withPackages (p: with p; [
-    cffi
-    cryptography
-    pyopenssl
-    crcmod
-  ] ++ lib.optional (with-gce) google-compute-engine);
+  pythonInputs = [ cffi cryptography pyopenssl crcmod ]
+                 ++ lib.optional (with-gce) google-compute-engine;
+  pythonPath = lib.makeSearchPath python.sitePackages pythonInputs;
 
   baseUrl = "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads";
   sources = name: system: {
@@ -55,8 +53,8 @@ in stdenv.mkDerivation rec {
         programPath="$out/google-cloud-sdk/bin/$program"
         binaryPath="$out/bin/$program"
         wrapProgram "$programPath" \
-            --set CLOUDSDK_PYTHON "${pythonEnv}/bin/python" \
-            --prefix PYTHONPATH : "${pythonEnv}/${python.sitePackages}"
+            --set CLOUDSDK_PYTHON "${python}/bin/python" \
+            --prefix PYTHONPATH : "${pythonPath}"
 
         mkdir -p $out/bin
         ln -s $programPath $binaryPath

@@ -45,7 +45,6 @@ let
   daemonService = appName: args:
     { description = "Samba Service Daemon ${appName}";
 
-      after = [ "network.target" ];
       requiredBy = [ "samba.target" ];
       partOf = [ "samba.target" ];
 

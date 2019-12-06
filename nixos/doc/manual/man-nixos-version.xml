@@ -12,22 +12,16 @@
  </refnamediv>
  <refsynopsisdiv>
   <cmdsynopsis>
-   <command>nixos-version</command>
+   <command>nixos-version</command> 
    <arg>
     <option>--hash</option>
    </arg>
-
+    
    <arg>
     <option>--revision</option>
    </arg>
-
-   <arg>
-    <option>--json</option>
-   </arg>
-
   </cmdsynopsis>
  </refsynopsisdiv>
-
  <refsection>
   <title>Description</title>
   <para>
@@ -90,16 +84,12 @@
    </variablelist>
   </para>
  </refsection>
-
  <refsection>
   <title>Options</title>
-
   <para>
    This command accepts the following options:
   </para>
-
   <variablelist>
-
    <varlistentry>
     <term>
      <option>--hash</option>
@@ -117,21 +107,6 @@
      </para>
     </listitem>
    </varlistentry>
-
-   <varlistentry>
-    <term>
-     <option>--json</option>
-    </term>
-    <listitem>
-     <para>
-      Print a JSON representation of the versions of NixOS and the
-      top-level configuration flake.
-     </para>
-    </listitem>
-   </varlistentry>
-
   </variablelist>
-
  </refsection>
-
 </refentry>

@@ -4,7 +4,7 @@
 }:
 
 let
-  buildUBoot = { version ? "2019.10"
+  buildUBoot = { version ? "2019.04"
             , filesToInstall
             , installDir ? "$out"
             , defconfig
@@ -20,7 +20,7 @@ let
 
     src = fetchurl {
       url = "ftp://ftp.denx.de/pub/u-boot/u-boot-${version}.tar.bz2";
-      sha256 = "053hcrwwlacqh2niisn0zas95zkbffw5aw5sdhixs8lmfdq60vcd";
+      sha256 = "1vwv4bgbl7fjcm073zrphn17hnz5h5h778f88ivdsgbb2lnpgdvn";
     };
 
     patches = [
@@ -82,7 +82,7 @@ let
       homepage = http://www.denx.de/wiki/U-Boot/;
       description = "Boot loader for embedded systems";
       license = licenses.gpl2;
-      maintainers = with maintainers; [ dezgeg samueldr ];
+      maintainers = [ maintainers.dezgeg ];
     } // extraMeta;
   } // removeAttrs args [ "extraMeta" ]);
 

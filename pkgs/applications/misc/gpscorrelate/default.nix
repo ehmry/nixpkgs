@@ -3,16 +3,14 @@
 
 stdenv.mkDerivation rec {
   pname = "gpscorrelate";
-  version = "unstable-2019-09-03";
+  version = "unstable-2019-06-05";
 
   src = fetchFromGitHub {
     owner = "dfandrich";
     repo = pname;
-    rev = "e1dd44a34f67b1ab7201440e60a840258ee448d2";
-    sha256 = "0gjwwdqh9dprzylmmnk3gm41khka9arkij3i9amd8y7d49pm9rlv";
+    rev = "80b14fe7c10c1cc8f62c13f517c062577ce88c85";
+    sha256 = "1gaan0nd7ai0bwilfnkza7lg5mz87804mvlygj0gjc672izr37r6";
   };
-
-  patches = [ ./fix-localedir.diff ];
 
   nativeBuildInputs = [
     desktop-file-utils
@@ -33,12 +31,11 @@ stdenv.mkDerivation rec {
     "GTK=3"
     "CC=cc"
     "CXX=c++"
-    "CFLAGS=-DENABLE_NLS"
   ];
 
   doCheck = true;
 
-  installTargets = [ "install" "install-po" "install-desktop-file" ];
+  installTargets = [ "install" "install-desktop-file" ];
 
   meta = with stdenv.lib; {
     description = "A GPS photo correlation tool, to add EXIF geotags";
@@ -62,6 +59,5 @@ stdenv.mkDerivation rec {
     license = licenses.gpl2Plus;
     homepage = "https://github.com/dfandrich/gpscorrelate";
     platforms = platforms.linux;
-    maintainers = with maintainers; [ sikmir ];
   };
 }

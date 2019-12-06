@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, substituteAll, intltool, pkgconfig, fetchpatch, dbus
+{ stdenv, fetchurl, substituteAll, intltool, pkgconfig, fetchpatch, dbus, dbus-glib
 , gnome3, systemd, libuuid, polkit, gnutls, ppp, dhcp, iptables, python3, vala
 , libgcrypt, dnsmasq, bluez5, readline, libselinux, audit
 , gobject-introspection, modemmanager, openresolv, libndp, newt, libsoup
@@ -10,11 +10,11 @@ let
   pythonForDocs = python3.withPackages (pkgs: with pkgs; [ pygobject3 ]);
 in stdenv.mkDerivation rec {
   pname = "network-manager";
-  version = "1.20.2";
+  version = "1.18.4";
 
   src = fetchurl {
     url = "mirror://gnome/sources/NetworkManager/${stdenv.lib.versions.majorMinor version}/NetworkManager-${version}.tar.xz";
-    sha256 = "115cgz448vypc7c592lqqjd7lp2kzdczhjk4ran6qls65hzkfkji";
+    sha256 = "0pnh1wr2p1fqa5pr945fr3lngfc5ccfrmgddqsg55lxnjpv0ggd3";
   };
 
   outputs = [ "out" "dev" "devdoc" "man" "doc" ];
@@ -33,7 +33,7 @@ in stdenv.mkDerivation rec {
     # to enable link-local connections
     "-Dudev_dir=${placeholder "out"}/lib/udev"
     "-Dresolvconf=${openresolv}/bin/resolvconf"
-    "-Ddbus_conf_dir=${placeholder "out"}/share/dbus-1/system.d"
+    "-Ddbus_conf_dir=${placeholder "out"}/etc/dbus-1/system.d"
     "-Dsystemdsystemunitdir=${placeholder "out"}/etc/systemd/system"
     "-Dkernel_firmware_dir=/run/current-system/firmware"
     "--sysconfdir=/etc"
@@ -43,6 +43,8 @@ in stdenv.mkDerivation rec {
     "-Dmodem_manager=true"
     "-Dnmtui=true"
     "-Ddocs=true"
+    # TODO: legacy library, will be *removed* in next release!
+    "-Dlibnm_glib=true"
     "-Dtests=no"
     "-Dqt=false"
     # Allow using iwd when configured to do so
@@ -51,15 +53,6 @@ in stdenv.mkDerivation rec {
   ];
 
   patches = [
-    # 1.20.2 added a decorators.sh script but they forgot to distribute it (breaking the build)
-    # as it was to fix things with gtk-doc 1.32 we can safely revert it.
-    (fetchpatch {
-      url = "https://gitlab.freedesktop.org/NetworkManager/NetworkManager/commit/2d941dc95a1d94d023ac8f98df2f344dbb1d223e.patch";
-      sha256 = "1mvbajddwd6diwk6dgjg5p65i6852gx6b9p3949rs63d2i6yzg21";
-      excludes = [ "tools/decorators.sh" ];
-      revert = true;
-    })
-
     (substituteAll {
       src = ./fix-paths.patch;
       inherit iputils kmod openconnect ethtool gnused dbus;
@@ -69,6 +62,13 @@ in stdenv.mkDerivation rec {
     # Meson does not support using different directories during build and
     # for installation like Autotools did with flags passed to make install.
     ./fix-install-paths.patch
+
+    # Fixes https://github.com/NixOS/nixpkgs/issues/72330
+    # Upstream MR: https://gitlab.freedesktop.org/NetworkManager/NetworkManager/merge_requests/323
+    (fetchpatch {
+      url = "https://gitlab.freedesktop.org/NetworkManager/NetworkManager/commit/ed03fcbd17a7f73faad2adf7bf21ae77ad93740d.patch";
+      sha256 = "1vv9c1i499900kjnisirby3jz9b99nwcm87r9x20xp4p73zpq2ry";
+    })
   ];
 
   buildInputs = [
@@ -76,16 +76,18 @@ in stdenv.mkDerivation rec {
     bluez5 dnsmasq gobject-introspection modemmanager readline newt libsoup jansson
   ];
 
-  propagatedBuildInputs = [ gnutls libgcrypt ];
+  propagatedBuildInputs = [ dbus-glib gnutls libgcrypt ];
 
   nativeBuildInputs = [
     meson ninja intltool pkgconfig
-    vala gobject-introspection dbus
+    vala gobject-introspection
+    dbus-glib # for dbus-binding-tool
     # Docs
     gtk-doc libxslt docbook_xsl docbook_xml_dtd_412 docbook_xml_dtd_42 docbook_xml_dtd_43 pythonForDocs
   ];
 
   doCheck = false; # requires /sys, the net
+
 
   postPatch = ''
     patchShebangs ./tools

@@ -1,22 +1,22 @@
-{ stdenv, fetchFromGitHub
+{ stdenv, fetchFromGitHub, makeWrapper
 , cmake, llvmPackages, rapidjson, runtimeShell }:
 
 stdenv.mkDerivation rec {
   pname = "ccls";
-  version = "0.20190823.3";
+  version = "0.20190314.1";
 
   src = fetchFromGitHub {
     owner = "MaskRay";
     repo = "ccls";
     rev = version;
-    sha256 = "1sx31zp6q2qc6fz3r78rx34zp2x4blrqzxwbpww71vb6lp1clmdm";
+    sha256 = "1yvxliryqx2bc7r6ri4iafbrjx19jk8hnfbvq5xla72q0gqb97lf";
   };
 
-  nativeBuildInputs = [ cmake ];
+  nativeBuildInputs = [ cmake makeWrapper ];
   buildInputs = with llvmPackages; [ clang-unwrapped llvm rapidjson ];
 
   cmakeFlags = [
-    "-DCCLS_VERSION=${version}"
+    "-DSYSTEM_CLANG=ON"
     "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.12"
   ];
 
@@ -45,6 +45,6 @@ stdenv.mkDerivation rec {
     homepage    = https://github.com/MaskRay/ccls;
     license     = licenses.asl20;
     platforms   = platforms.linux ++ platforms.darwin;
-    maintainers = with maintainers; [ mic92 tobim ];
+    maintainers = [ maintainers.mic92 ];
   };
 }

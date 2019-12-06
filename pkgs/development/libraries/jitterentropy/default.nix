@@ -1,13 +1,13 @@
 { stdenv, fetchFromGitHub }:
 stdenv.mkDerivation rec {
   pname = "jitterentropy";
-  version = "2.2.0";
+  version = "2.1.2";
 
   src = fetchFromGitHub {
     owner = "smuellerDD";
     repo = "jitterentropy-library";
     rev = "v${version}";
-    sha256 = "0n2l1fxr7bynnarpwdjifb2fvlsq8w5wmfh31yk5nrc756cjlgyw";
+    sha256 = "10yl1hi0hysr53wzy2i8brs0qqnxh46mz3dcjh5mk0ad03wvbfsl";
   };
 
   enableParallelBuilding = true;

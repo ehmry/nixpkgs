@@ -1692,7 +1692,7 @@ someVar=$(stripHash $name)
     </term>
     <listitem>
      <para>
-      Convenience function for <literal>makeWrapper</literal> that automatically creates a sane wrapper file. It takes all the same arguments as <literal>makeWrapper</literal>, except for <literal>--argv0</literal>.
+      Convenience function for <literal>makeWrapper</literal> that automatically creates a sane wrapper file It takes all the same arguments as <literal>makeWrapper</literal>, except for <literal>--argv0</literal>.
      </para>
      <para>
       It cannot be applied multiple times, since it will overwrite the wrapper file.
@@ -1833,7 +1833,7 @@ addEnvHooks "$hostOffset" myBashFunction
        The Bintools Wrapper wraps the binary utilities for a bunch of miscellaneous purposes. These are GNU Binutils when targetting Linux, and a mix of cctools and GNU binutils for Darwin. [The "Bintools" name is supposed to be a compromise between "Binutils" and "cctools" not denoting any specific implementation.] Specifically, the underlying bintools package, and a C standard library (glibc or Darwin's libSystem, just for the dynamic loader) are all fed in, and dependency finding, hardening (see below), and purity checks for each are handled by the Bintools Wrapper. Packages typically depend on CC Wrapper, which in turn (at run time) depends on the Bintools Wrapper.
       </para>
       <para>
-       The Bintools Wrapper was only just recently split off from CC Wrapper, so the division of labor is still being worked out. For example, it shouldn't care about the C standard library, but just take a derivation with the dynamic loader (which happens to be the glibc on linux). Dependency finding however is a task both wrappers will continue to need to share, and probably the most important to understand. It is currently accomplished by collecting directories of host-platform dependencies (i.e. <varname>buildInputs</varname> and <varname>nativeBuildInputs</varname>) in environment variables. The Bintools Wrapper's setup hook causes any <filename>lib</filename> and <filename>lib64</filename> subdirectories to be added to <envar>NIX_LDFLAGS</envar>. Since the CC Wrapper and the Bintools Wrapper use the same strategy, most of the Bintools Wrapper code is sparsely commented and refers to the CC Wrapper. But the CC Wrapper's code, by contrast, has quite lengthy comments. The Bintools Wrapper merely cites those, rather than repeating them, to avoid falling out of sync.
+       The Bintools Wrapper was only just recently split off from CC Wrapper, so the division of labor is still being worked out. For example, it shouldn't care about about the C standard library, but just take a derivation with the dynamic loader (which happens to be the glibc on linux). Dependency finding however is a task both wrappers will continue to need to share, and probably the most important to understand. It is currently accomplished by collecting directories of host-platform dependencies (i.e. <varname>buildInputs</varname> and <varname>nativeBuildInputs</varname>) in environment variables. The Bintools Wrapper's setup hook causes any <filename>lib</filename> and <filename>lib64</filename> subdirectories to be added to <envar>NIX_LDFLAGS</envar>. Since the CC Wrapper and the Bintools Wrapper use the same strategy, most of the Bintools Wrapper code is sparsely commented and refers to the CC Wrapper. But the CC Wrapper's code, by contrast, has quite lengthy comments. The Bintools Wrapper merely cites those, rather than repeating them, to avoid falling out of sync.
       </para>
       <para>
        A final task of the setup hook is defining a number of standard environment variables to tell build systems which executables fulfill which purpose. They are defined to just be the base name of the tools, under the assumption that the Bintools Wrapper's binaries will be on the path. Firstly, this helps poorly-written packages, e.g. ones that look for just <command>gcc</command> when <envar>CC</envar> isn't defined yet <command>clang</command> is to be used. Secondly, this helps packages not get confused when cross-compiling, in which case multiple Bintools Wrappers may simultaneously be in use.
@@ -1869,7 +1869,7 @@ addEnvHooks "$hostOffset" myBashFunction
   </para>
 
   <para>
-   Here are some more packages that provide a setup hook. Since the list of hooks is extensible, this is not an exhaustive list. The mechanism is only to be used as a last resort, so it might cover most uses.
+   Here are some more packages that provide a setup hook. Since the list of hooks is extensible, this is not an exhaustive list the mechanism is only to be used as a last resort, it might cover most uses.
    <variablelist>
     <varlistentry>
      <term>

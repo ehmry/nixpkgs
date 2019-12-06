@@ -66,14 +66,8 @@ in
     defaultChannel = mkOption {
       internal = true;
       type = types.str;
-      default = https://nixos.org/channels/nixos-unstable;
+      default = https://nixos.org/channels/nixos-19.09;
       description = "Default NixOS channel to which the root user is subscribed.";
-    };
-
-    configurationRevision = mkOption {
-      type = types.nullOr types.str;
-      default = null;
-      description = "The Git revision of the top-level flake from which this configuration was built.";
     };
 
   };

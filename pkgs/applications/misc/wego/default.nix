@@ -17,7 +17,5 @@ buildGoPackage rec {
 
   meta = {
     license = stdenv.lib.licenses.isc;
-    homepage = "https://github.com/schachmat/wego";
-    description = "Weather app for the terminal";
   };
 }

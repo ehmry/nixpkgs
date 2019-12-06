@@ -1,16 +1,19 @@
 { lib, go, buildGoPackage, fetchFromGitHub }:
 
+let
+  goPackagePath = "github.com/prometheus/prometheus";
+in
 buildGoPackage rec {
   pname = "prometheus";
-  version = "2.13.1";
+  version = "2.13.0";
 
-  goPackagePath = "github.com/prometheus/prometheus";
+  inherit goPackagePath;
 
   src = fetchFromGitHub {
     rev = "v${version}";
     owner = "prometheus";
     repo = "prometheus";
-    sha256 = "055qliv683b87dwj7pkprdpjgyp6s4s3cwvpbsl1gxidhlr4y69b";
+    sha256 = "08fmicgrv9b37qapmqjbif19c9181mpp7abd2yrpc3xpyjd3h687";
   };
 
   buildFlagsArray = let

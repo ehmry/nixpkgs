@@ -24,6 +24,7 @@
 , libxkbcommon
 , gmp
 , gnome3
+, hicolor-icon-theme
 , gsettings-desktop-schemas
 , sassc
 , x11Support ? stdenv.isLinux
@@ -44,19 +45,16 @@ with stdenv.lib;
 
 stdenv.mkDerivation rec {
   pname = "gtk+3";
-  version = "3.24.11";
+  version = "3.24.10";
 
   outputs = [ "out" "dev" ];
   outputBin = "dev";
 
-  setupHooks = [
-    ./gtk3-clean-immodules-cache.sh
-    ./drop-icon-theme-cache.sh
-  ];
+  setupHook = ./gtk3-setup-hook.sh;
 
   src = fetchurl {
     url = "mirror://gnome/sources/gtk+/${stdenv.lib.versions.majorMinor version}/gtk+-${version}.tar.xz";
-    sha256 = "1598k357xvffbswsrvc63lyj73wq0b510lhg4vcgl6rf1a6nb9yv";
+    sha256 = "00qvq1r96ikdalv7xzgng1kad9i0rcahqk01gwhxl3xrw83z3a1m";
   };
 
   patches = [
@@ -105,13 +103,14 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [
     gettext
     gobject-introspection
+    hicolor-icon-theme # setup-hook
     makeWrapper
     meson
     ninja
     pkgconfig
     python3
     sassc
-    setupHooks
+    setupHook
   ];
 
   buildInputs = [

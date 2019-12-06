@@ -152,9 +152,7 @@ stdenv.lib.makeScope pkgs.newScope (self: with self; {
     installPhase = "installPlugins src/gimp-lqr-plugin";
   };
 
-  gmic = pkgs.gmic-qt.override {
-    variant = "gimp";
-  };
+  gmic = pkgs.gmic.gimpPlugin;
 
   ufraw = pkgs.ufraw.gimpPlugin;
 

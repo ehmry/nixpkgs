@@ -5,20 +5,17 @@ with lib;
 let
 
   inherit (pkgs) plymouth;
-  inherit (pkgs) nixos-icons;
 
   cfg = config.boot.plymouth;
 
-  nixosBreezePlymouth = pkgs.breeze-plymouth.override {
-    logoFile = cfg.logo;
-    logoName = "nixos";
-    osName = "NixOS";
-    osVersion = config.system.nixos.release;
+  breezePlymouth = pkgs.breeze-plymouth.override {
+    nixosBranding = true;
+    nixosVersion = config.system.nixos.release;
   };
 
   themesEnv = pkgs.buildEnv {
     name = "plymouth-themes";
-    paths = [ plymouth ] ++ cfg.themePackages;
+    paths = [ plymouth breezePlymouth ] ++ cfg.themePackages;
   };
 
   configFile = pkgs.writeText "plymouthd.conf" ''
@@ -38,7 +35,7 @@ in
       enable = mkEnableOption "Plymouth boot splash screen";
 
       themePackages = mkOption {
-        default = [ nixosBreezePlymouth ];
+        default = [];
         type = types.listOf types.package;
         description = ''
           Extra theme packages for plymouth.
@@ -55,7 +52,10 @@ in
 
       logo = mkOption {
         type = types.path;
-        default = "${nixos-icons}/share/icons/hicolor/128x128/apps/nix-snowflake.png";
+        default = pkgs.fetchurl {
+          url = "https://nixos.org/logo/nixos-hires.png";
+          sha256 = "1ivzgd7iz0i06y36p8m5w48fd8pjqwxhdaavc0pxs7w1g7mcy5si";
+        };
         defaultText = ''pkgs.fetchurl {
           url = "https://nixos.org/logo/nixos-hires.png";
           sha256 = "1ivzgd7iz0i06y36p8m5w48fd8pjqwxhdaavc0pxs7w1g7mcy5si";
@@ -88,7 +88,10 @@ in
     systemd.services.plymouth-kexec.wantedBy = [ "kexec.target" ];
     systemd.services.plymouth-halt.wantedBy = [ "halt.target" ];
     systemd.services.plymouth-quit-wait.wantedBy = [ "multi-user.target" ];
-    systemd.services.plymouth-quit.wantedBy = [ "multi-user.target" ];
+    systemd.services.plymouth-quit = {
+      wantedBy = [ "multi-user.target" ];
+      after = [ "display-manager.service" ];
+    };
     systemd.services.plymouth-poweroff.wantedBy = [ "poweroff.target" ];
     systemd.services.plymouth-reboot.wantedBy = [ "reboot.target" ];
     systemd.services.plymouth-read-write.wantedBy = [ "sysinit.target" ];

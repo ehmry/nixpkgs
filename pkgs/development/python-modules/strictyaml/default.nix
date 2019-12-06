@@ -6,12 +6,12 @@
 }:
 
 buildPythonPackage rec {
-  version = "1.0.3";
+  version = "1.0.1";
   pname = "strictyaml";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "05masza4jvvnh2msswpx4l29w1pv92zpy473yd2ndwcclcrk3rli";
+    sha256 = "1baz5zjl1z9dwaczaga1ik1iy1v9zg3acwnpmgghwnk9hw2i1mq6";
   };
 
   propagatedBuildInputs = [ ruamel_yaml python-dateutil ];

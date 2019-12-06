@@ -1,5 +1,5 @@
-{ stdenv, fetchurl, pkgconfig, autoreconfHook, libestr, json_c, zlib, pythonPackages, fastJson
-, libkrb5 ? null, systemd ? null, jemalloc ? null, libmysqlclient ? null, postgresql ? null
+{ stdenv, fetchurl, fetchpatch, pkgconfig, autoreconfHook, libestr, json_c, zlib, pythonPackages, fastJson
+, libkrb5 ? null, systemd ? null, jemalloc ? null, mysql ? null, postgresql ? null
 , libdbi ? null, net_snmp ? null, libuuid ? null, curl ? null, gnutls ? null
 , libgcrypt ? null, liblognorm ? null, openssl ? null, librelp ? null, libksi ? null
 , libgt ? null, liblogging ? null, libnet ? null, hadoop ? null, rdkafka ? null
@@ -11,15 +11,21 @@ let
   mkFlag = cond: name: if cond then "--enable-${name}" else "--disable-${name}";
 in
 stdenv.mkDerivation rec {
-  pname = "rsyslog";
-  version = "8.1910.0";
+  name = "rsyslog-8.1907.0";
 
   src = fetchurl {
-    url = "https://www.rsyslog.com/files/download/rsyslog/${pname}-${version}.tar.gz";
-    sha256 = "14qczsj12spx0m3dz1pkxnacwi5njr0syamnmi1rg8ri5xlyw682";
+    url = "https://www.rsyslog.com/files/download/rsyslog/${name}.tar.gz";
+    sha256 = "1dcz0w5xalqsi2xjb5j7c9mq5kf9s9kq9j2inpv4w5wkrrg569zb";
   };
 
-  #patches = [ ./fix-gnutls-detection.patch ];
+  patches = [
+    #./fix-gnutls-detection.patch
+    (fetchpatch {
+      name = "CVE-2019-17040.patch";
+      url = "https://github.com/rsyslog/rsyslog/pull/3875.patch";
+      sha256 = "0f93ahlkw7p5znqak0l82mw9gz3kxpi1zxfzycb5dk8n5zb89rfn";
+    })
+  ];
 
   nativeBuildInputs = [ pkgconfig autoreconfHook ];
   buildInputs = [
@@ -27,7 +33,7 @@ stdenv.mkDerivation rec {
     postgresql libdbi net_snmp libuuid curl gnutls libgcrypt liblognorm openssl
     librelp libgt libksi liblogging libnet hadoop rdkafka libmongo-client czmq
     rabbitmq-c hiredis mongoc
-  ] ++ stdenv.lib.optional (libmysqlclient != null) libmysqlclient
+  ] ++ stdenv.lib.optional (mysql != null) mysql.connector-c
     ++ stdenv.lib.optional stdenv.isLinux systemd;
 
   hardeningDisable = [ "format" ];
@@ -51,7 +57,7 @@ stdenv.mkDerivation rec {
     (mkFlag false                     "valgrind")
     (mkFlag false                     "diagtools")
     (mkFlag true                      "usertools")
-    (mkFlag (libmysqlclient != null)  "mysql")
+    (mkFlag (mysql != null)           "mysql")
     (mkFlag (postgresql != null)      "pgsql")
     (mkFlag (libdbi != null)          "libdbi")
     (mkFlag (net_snmp != null)        "snmp")
@@ -109,7 +115,6 @@ stdenv.mkDerivation rec {
   meta = {
     homepage = https://www.rsyslog.com/;
     description = "Enhanced syslog implementation";
-    changelog = "https://raw.githubusercontent.com/rsyslog/rsyslog/v${version}/ChangeLog";
     license = licenses.gpl3;
     platforms = platforms.linux;
   };

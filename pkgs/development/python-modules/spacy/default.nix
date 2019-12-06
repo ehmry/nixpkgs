@@ -26,15 +26,15 @@
 
 buildPythonPackage rec {
   pname = "spacy";
-  version = "2.2.1";
+  version = "2.1.8";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "1a833dx8i4s106fk42x4dnayaq5p3qxaxnc012xij991i09v2pxn";
+    sha256 = "1dja0crbai2n1l19m0hkv2fkj9r6zzy5ijd6dffp60v7lrch8lcw";
   };
 
   prePatch = ''
-    substituteInPlace setup.cfg \
+    substituteInPlace setup.py \
       --replace "plac<1.0.0,>=0.9.6" "plac>=0.9.6"
   '';
 

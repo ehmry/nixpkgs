@@ -96,15 +96,6 @@ let
   buildPath = "out/${buildType}";
   libExecPath = "$out/libexec/${packageName}";
 
-  versionRange = min-version: upto-version:
-    let inherit (upstream-info) version;
-        result = versionAtLeast version min-version && versionOlder version upto-version;
-        stable-version = (import ./upstream-info.nix).stable.version;
-    in if versionAtLeast stable-version upto-version
-       then warn "chromium: stable version ${stable-version} is newer than a patchset bounded at ${upto-version}. You can safely delete it."
-            result
-       else result;
-
   base = rec {
     name = "${packageName}-unwrapped-${version}";
     inherit (upstream-info) channel version;
@@ -136,19 +127,10 @@ let
       ./patches/nix_plugin_paths_68.patch
       ./patches/remove-webp-include-69.patch
       ./patches/no-build-timestamps.patch
-    ] ++ optionals (channel == "stable" || channel == "beta") [
-      ./patches/widevine.patch
-    ] ++ optionals (channel == "dev") [
-      ./patches/widevine-79.patch
     ] ++ optionals (channel == "stable") [
-      # Revert "Implement GetFallbackFont on Linux" to fix a performance regression
-      # Remove after https://bugs.chromium.org/p/chromium/issues/detail?id=1003997 is fixed
-      (fetchpatch {
-        url = "https://github.com/chromium/chromium/commit/5a32abe4247f80fdb55c55a289b906b0e42faa5f.patch";
-        sha256 = "1a4jqmki6cyi2dwvaszh01db2diqnz1d50mhpdpby3dd1cw0xmfy";
-        revert = true;
-      })
-
+      ./patches/widevine.patch
+    ] ++ optionals (channel == "beta" || channel == "dev") [
+      ./patches/widevine-79.patch
       # Unfortunately, chromium regularly breaks on major updates and
       # then needs various patches backported in order to be compiled with GCC.
       # Good sources for such patches and other hints:
@@ -157,10 +139,9 @@ let
       # - https://github.com/chromium/chromium/search?q=GCC&s=committer-date&type=Commits
       #
       # ++ optionals (channel == "dev") [ ( githubPatch "<patch>" "0000000000000000000000000000000000000000000000000000000000000000" ) ]
-      # ++ optional (versionRange "68" "72") ( githubPatch "<patch>" "0000000000000000000000000000000000000000000000000000000000000000" )
     ] ++ optionals (useVaapi) [
-      # source: https://aur.archlinux.org/cgit/aur.git/plain/chromium-vaapi.patch?h=chromium-vaapi
-      ./patches/chromium-vaapi.patch
+      # source: https://aur.archlinux.org/cgit/aur.git/tree/vaapi-fix.patch?h=chromium-vaapi
+      ./patches/vaapi-fix.patch
     ] ++ optional stdenv.isAarch64 (fetchpatch {
       url       = https://raw.githubusercontent.com/OSSystems/meta-browser/e4a667deaaf9a26a3a1aeb355770d1f29da549ad/recipes-browser/chromium/files/aarch64-skia-build-fix.patch;
       postFetch = "substituteInPlace $out --replace __aarch64__ SK_CPU_ARM64";

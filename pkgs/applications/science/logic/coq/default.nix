@@ -7,9 +7,8 @@
 
 { stdenv, fetchFromGitHub, writeText, pkgconfig
 , ocamlPackages, ncurses
-, buildIde ? !stdenv.lib.versionAtLeast version "8.10" # lablgtk3 cannot be built with GTK3 at version 3.24.11
+, buildIde ? !(stdenv.lib.versionAtLeast version "8.10" && stdenv.isDarwin) # GTK3 at version 3.24.10 on darwin has wrong gdkconfig.h
 , glib, gnome3, wrapGAppsHook
-, darwin
 , csdp ? null
 , version
 }:
@@ -108,7 +107,6 @@ self = stdenv.mkDerivation {
   ++ stdenv.lib.optionals buildIde
     (if versionAtLeast "8.10"
      then [ ocamlPackages.lablgtk3-sourceview3 glib gnome3.defaultIconTheme wrapGAppsHook ]
-     ++ stdenv.lib.optional stdenv.isDarwin darwin.apple_sdk.frameworks.Cocoa
      else [ ocamlPackages.lablgtk ]);
 
   postPatch = ''

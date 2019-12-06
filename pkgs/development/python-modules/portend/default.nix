@@ -24,9 +24,6 @@ buildPythonPackage rec {
     py.test --deselect=test_portend.py::TestChecker::test_check_port_listening
   '';
 
-  # Some of the tests use localhost networking.
-  __darwinAllowLocalNetworking = true;
-
   meta = with stdenv.lib; {
     description = "Monitor TCP ports for bound or unbound states";
     homepage = https://github.com/jaraco/portend;

@@ -25,12 +25,9 @@ stdenv.mkDerivation rec {
 
   enableParallelBuilding = true;
 
-  setupHooks =  [
-    ./gtk2-clean-immodules-cache.sh
-    ./drop-icon-theme-cache.sh
-  ];
+  setupHook = ./setup-hook.sh;
 
-  nativeBuildInputs = [ setupHooks perl pkgconfig gettext gobject-introspection ];
+  nativeBuildInputs = [ setupHook perl pkgconfig gettext gobject-introspection ];
 
   patches = [
     ./2.0-immodules.cache.patch

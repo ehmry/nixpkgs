@@ -66,8 +66,6 @@ with lib;
 
     (mkRenamedOptionModule [ "services" "clamav" "updater" "config" ] [ "services" "clamav" "updater" "extraConfig" ])
 
-    (mkRemovedOptionModule [ "services" "pykms" "verbose" ] "Use services.pykms.logLevel instead")
-
     (mkRemovedOptionModule [ "security" "setuidOwners" ] "Use security.wrappers instead")
     (mkRemovedOptionModule [ "security" "setuidPrograms" ] "Use security.wrappers instead")
 
@@ -135,7 +133,8 @@ with lib;
     # piwik was renamed to matomo
     (mkRenamedOptionModule [ "services" "piwik" "enable" ] [ "services" "matomo" "enable" ])
     (mkRenamedOptionModule [ "services" "piwik" "webServerUser" ] [ "services" "matomo" "webServerUser" ])
-    (mkRenamedOptionModule [ "services" "piwik" "phpfpmProcessManagerConfig" ] [ "services" "matomo" "phpfpmProcessManagerConfig" ])
+    (mkRemovedOptionModule [ "services" "piwik" "phpfpmProcessManagerConfig" ] "Use services.phpfpm.pools.<name>.settings")
+    (mkRemovedOptionModule [ "services" "matomo" "phpfpmProcessManagerConfig" ] "Use services.phpfpm.pools.<name>.settings")
     (mkRenamedOptionModule [ "services" "piwik" "nginx" ] [ "services" "matomo" "nginx" ])
 
     # tarsnap

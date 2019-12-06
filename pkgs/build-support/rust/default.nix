@@ -13,9 +13,6 @@
 , cargoUpdateHook ? ""
 , cargoDepsHook ? ""
 , cargoBuildFlags ? []
-, # Set to true to verify if the cargo dependencies are up to date.
-  # This will change the value of cargoSha256.
-  verifyCargoDeps ? false
 , buildType ? "release"
 , meta ? {}
 
@@ -29,7 +26,6 @@ let
   cargoDeps = if cargoVendorDir == null
     then fetchcargo {
         inherit name src srcs sourceRoot cargoUpdateHook;
-        copyLockfile = verifyCargoDeps;
         patches = cargoPatches;
         sha256 = cargoSha256;
       }
@@ -90,30 +86,11 @@ stdenv.mkDerivation (args // {
     ${stdenv.lib.optionalString (stdenv.buildPlatform.config != stdenv.hostPlatform.config) ''
     [target."${rustHostConfig}"]
     "linker" = "${ccForHost}"
-    ${# https://github.com/rust-lang/rust/issues/46651#issuecomment-433611633
-      stdenv.lib.optionalString (stdenv.hostPlatform.isMusl && stdenv.hostPlatform.isAarch64) ''
-    "rustflags" = [ "-C", "target-feature=+crt-static", "-C", "link-arg=-lgcc" ]
-    ''}
     ''}
     EOF
 
     unset cargoDepsCopy
     export RUST_LOG=${logLevel}
-  '' + stdenv.lib.optionalString verifyCargoDeps ''
-    if ! diff source/Cargo.lock $cargoDeps/Cargo.lock ; then
-      echo
-      echo "ERROR: cargoSha256 is out of date."
-      echo
-      echo "Cargo.lock is not the same in $cargoDeps."
-      echo
-      echo "To fix the issue:"
-      echo '1. Use "1111111111111111111111111111111111111111111111111111" as the cargoSha256 value'
-      echo "2. Build the derivation and wait it to fail with a hash mismatch"
-      echo "3. Copy the 'got: sha256:' value back into the cargoSha256 field"
-      echo
-
-      exit 1
-    fi
   '' + (args.postUnpack or "");
 
   configurePhase = args.configurePhase or ''
@@ -149,8 +126,8 @@ stdenv.mkDerivation (args // {
 
   checkPhase = args.checkPhase or ''
     runHook preCheck
-    echo "Running cargo test"
-    cargo test
+    echo "Running cargo cargo test -- ''${checkFlags} ''${checkFlagsArray+''${checkFlagsArray[@]}}"
+    cargo test -- ''${checkFlags} ''${checkFlagsArray+"''${checkFlagsArray[@]}"}
     runHook postCheck
   '';
 

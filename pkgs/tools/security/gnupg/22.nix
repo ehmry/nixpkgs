@@ -24,9 +24,9 @@ stdenv.mkDerivation rec {
   };
 
   depsBuildBuild = [ buildPackages.stdenv.cc ];
-  nativeBuildInputs = [ pkgconfig texinfo ];
+  nativeBuildInputs = [ pkgconfig ];
   buildInputs = [
-    libgcrypt libassuan libksba libiconv npth gettext
+    libgcrypt libassuan libksba libiconv npth gettext texinfo
     readline libusb gnutls adns openldap zlib bzip2 sqlite
   ];
 

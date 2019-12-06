@@ -2,11 +2,11 @@
 
 buildPythonPackage rec {
   pname = "Logbook";
-  version = "1.5.2";
+  version = "1.4.3";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "0mvsig6sk4dywpw5naah1npf6h621qzhg0sd427j5znr06a2ksqs";
+    sha256 = "a5a96792abd8172c80d61b7530e134524f20e2841981038031e602ed5920fef5";
   };
 
   checkInputs = [ pytest ] ++ lib.optionals (!isPy3k) [ mock ];
@@ -17,9 +17,6 @@ buildPythonPackage rec {
     find tests -name \*.pyc -delete
     py.test tests
   '';
-
-  # Some of the tests use localhost networking.
-  __darwinAllowLocalNetworking = true;
 
   meta = {
     homepage = https://pythonhosted.org/Logbook/;

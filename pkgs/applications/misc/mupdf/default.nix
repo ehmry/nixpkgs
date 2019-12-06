@@ -9,7 +9,8 @@ let
 
   # OpenJPEG version is hardcoded in package source
   openJpegVersion = with stdenv;
-    lib.versions.majorMinor (lib.getVersion openjpeg);
+    lib.concatStringsSep "." (lib.lists.take 2
+      (lib.splitString "." (lib.getVersion openjpeg)));
 
 
 in stdenv.mkDerivation rec {

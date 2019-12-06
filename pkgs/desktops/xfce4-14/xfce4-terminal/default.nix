@@ -1,4 +1,4 @@
-{ mkXfceDerivation, gtk3, libxfce4ui, vte, xfconf, pcre2 }:
+{ mkXfceDerivation, gtk3, libxfce4ui, vte, xfconf }:
 
 mkXfceDerivation {
   category = "apps";
@@ -7,7 +7,7 @@ mkXfceDerivation {
 
   sha256 = "0sg9vwyvhh7pjp83biv7gvf42423a7ly4dc7q2gn28kp6bds2qcp";
 
-  buildInputs = [ gtk3 libxfce4ui vte xfconf pcre2 ];
+  buildInputs = [ gtk3 libxfce4ui vte xfconf ];
 
   meta = {
     description = "A modern terminal emulator";

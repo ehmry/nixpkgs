@@ -8,11 +8,6 @@ case "$1" in
   --hash|--revision)
     echo "@revision@"
     ;;
-  --json)
-    cat <<EOF
-{"nixosVersion": "@version@", "nixpkgsRevision": "@revision@", "configurationRevision": "@configurationRevision@"}
-EOF
-    ;;
   *)
     echo "@version@ (@codeName@)"
     ;;

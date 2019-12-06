@@ -6,13 +6,13 @@
 
 mkDerivation rec {
   pname = "stellarium";
-  version = "0.19.2";
+  version = "0.19.1";
 
   src = fetchFromGitHub {
     owner = "Stellarium";
     repo = "stellarium";
     rev = "v${version}";
-    sha256 = "1ki3s4smazr6xfkr0grrmjp2s8yjprismiaq7l54d0il7rkvhibd";
+    sha256 = "0hf1wv2bb5j7ny2xh29mj9m4hjblhn02zylay8gl85w7xlqs7s5r";
   };
 
   nativeBuildInputs = [ cmake perl wrapQtAppsHook ];

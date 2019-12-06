@@ -1,40 +1,30 @@
-{ lib, stdenv, fetchurl, makeWrapper, curl, icu60, openssl, zlib }:
+{ stdenv, fetchurl, mono, curl, makeWrapper }:
 
 stdenv.mkDerivation rec {
   pname = "jackett";
-  version = "0.11.751";
+  version = "0.11.589";
 
   src = fetchurl {
-    url = "https://github.com/Jackett/Jackett/releases/download/v${version}/Jackett.Binaries.LinuxAMDx64.tar.gz";
-    sha256 = "09y9pck35pj2g89936zallxr3hanmbgp8jc42nj2js68l0z64qz3";
+    url = "https://github.com/Jackett/Jackett/releases/download/v${version}/Jackett.Binaries.Mono.tar.gz";
+    sha256 = "14lj33xmhf35pq781wvzyw983yff447mc253x0ppi3b5rwkrgkyz";
   };
 
   buildInputs = [ makeWrapper ];
 
   installPhase = ''
-    mkdir -p $out/{bin,opt/${pname}-${version}}
-    cp -r * $out/opt/${pname}-${version}
+    mkdir -p $out/{bin,share/${pname}-${version}}
+    cp -r * $out/share/${pname}-${version}
 
-    makeWrapper "$out/opt/${pname}-${version}/jackett" $out/bin/Jackett \
-      --prefix LD_LIBRARY_PATH ':' "${curl.out}/lib:${icu60.out}/lib:${openssl.out}/lib:${zlib.out}/lib"
-  '';
-
-  preFixup = let
-    libPath = lib.makeLibraryPath [
-      stdenv.cc.cc.lib  # libstdc++.so.6
-    ];
-  in ''
-    patchelf \
-      --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
-      --set-rpath "${libPath}" \
-      $out/opt/${pname}-${version}/jackett
+    makeWrapper "${mono}/bin/mono" $out/bin/Jackett \
+      --add-flags "$out/share/${pname}-${version}/JackettConsole.exe" \
+      --prefix LD_LIBRARY_PATH ':' "${curl.out}/lib"
   '';
 
   meta = with stdenv.lib; {
     description = "API Support for your favorite torrent trackers.";
     homepage = https://github.com/Jackett/Jackett/;
     license = licenses.gpl2;
-    maintainers = with maintainers; [ edwtjo nyanloutre ];
+    maintainers = with maintainers; [ edwtjo ];
     platforms = platforms.all;
   };
 }

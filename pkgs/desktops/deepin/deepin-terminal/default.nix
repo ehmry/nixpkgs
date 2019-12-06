@@ -1,7 +1,7 @@
-{ stdenv, fetchFromGitHub, pkgconfig, cmake, ninja, vala_0_44,
+{ stdenv, fetchFromGitHub, pkgconfig, cmake, ninja, vala,
   gettext, at-spi2-core, dbus, epoxy, expect, gtk3, json-glib,
   libXdmcp, libgee, libpthreadstubs, librsvg, libsecret, libtasn1,
-  libxcb, libxkbcommon, p11-kit, pcre, vte, wnck, libselinux, gnutls, pcre2,
+  libxcb, libxkbcommon, p11-kit, pcre, vte, wnck, libselinux,
   libsepol, utillinux, deepin-menu, deepin-shortcut-viewer, deepin, wrapGAppsHook }:
 
 stdenv.mkDerivation rec {
@@ -19,7 +19,7 @@ stdenv.mkDerivation rec {
     pkgconfig
     cmake
     ninja
-    vala_0_44 # xcb.vapi:411.3-411.48: error: missing return statement at end of subroutine body
+    vala
     gettext
     libselinux libsepol utillinux # required by gio
     deepin.setupHook
@@ -47,8 +47,6 @@ stdenv.mkDerivation rec {
     pcre
     vte
     wnck
-    gnutls
-    pcre2
   ];
 
   postPatch = ''

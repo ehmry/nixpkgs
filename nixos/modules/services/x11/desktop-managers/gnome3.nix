@@ -30,10 +30,6 @@ let
 
      cp -f ${pkgs.gnome3.gnome-shell}/share/gsettings-schemas/*/glib-2.0/schemas/*.gschema.override $out/share/gsettings-schemas/nixos-gsettings-overrides/glib-2.0/schemas
 
-     ${optionalString flashbackEnabled ''
-       cp -f ${pkgs.gnome3.gnome-flashback}/share/gsettings-schemas/*/glib-2.0/schemas/*.gschema.override $out/share/gsettings-schemas/nixos-gsettings-overrides/glib-2.0/schemas
-     ''}
-
      chmod -R a+w $out/share/gsettings-schemas/nixos-gsettings-overrides
      cat - > $out/share/gsettings-schemas/nixos-gsettings-overrides/glib-2.0/schemas/nixos-defaults.gschema.override <<- EOF
        [org.gnome.desktop.background]
@@ -161,10 +157,10 @@ in
 
       environment.systemPackages = cfg.sessionPath;
 
-      environment.sessionVariables.GNOME_SESSION_DEBUG = mkIf cfg.debug "1";
+      environment.variables.GNOME_SESSION_DEBUG = mkIf cfg.debug "1";
 
       # Override GSettings schemas
-      environment.sessionVariables.NIX_GSETTINGS_OVERRIDES_DIR = "${nixos-gsettings-desktop-schemas}/share/gsettings-schemas/nixos-gsettings-overrides/glib-2.0/schemas";
+      environment.variables.NIX_GSETTINGS_OVERRIDES_DIR = "${nixos-gsettings-desktop-schemas}/share/gsettings-schemas/nixos-gsettings-overrides/glib-2.0/schemas";
 
        # If gnome3 is installed, build vim for gtk3 too.
       nixpkgs.config.vim.gui = "gtk3";
@@ -217,6 +213,12 @@ in
 
       services.xserver.updateDbusEnvironment = true;
 
+      # gnome has a custom alert theme but it still
+      # inherits from the freedesktop theme.
+      environment.systemPackages = with pkgs; [
+        sound-theme-freedesktop
+      ];
+
       # Needed for themes and backgrounds
       environment.pathsToLink = [
         "/share" # TODO: https://github.com/NixOS/nixpkgs/issues/47173
@@ -227,7 +229,6 @@ in
       services.colord.enable = mkDefault true;
       services.gnome3.chrome-gnome-shell.enable = mkDefault true;
       services.gnome3.glib-networking.enable = true;
-      services.gnome3.gnome-initial-setup.enable = mkDefault true;
       services.gnome3.gnome-remote-desktop.enable = mkDefault true;
       services.gnome3.gnome-settings-daemon.enable = true;
       services.gnome3.gnome-user-share.enable = mkDefault true;
@@ -235,8 +236,7 @@ in
       services.gvfs.enable = true;
       services.system-config-printer.enable = (mkIf config.services.printing.enable (mkDefault true));
       services.telepathy.enable = mkDefault true;
-
-      systemd.packages = with pkgs.gnome3; [ vino gnome-session ];
+      systemd.packages = [ pkgs.gnome3.vino ];
 
       services.avahi.enable = mkDefault true;
 
@@ -329,10 +329,10 @@ in
 
       # Let nautilus find extensions
       # TODO: Create nautilus-with-extensions package
-      environment.sessionVariables.NAUTILUS_EXTENSION_DIR = "${config.system.path}/lib/nautilus/extensions-3.0";
+      environment.variables.NAUTILUS_EXTENSION_DIR = "${config.system.path}/lib/nautilus/extensions-3.0";
 
       # Override default mimeapps for nautilus
-      environment.sessionVariables.XDG_DATA_DIRS = [ "${mimeAppsList}/share" ];
+      environment.variables.XDG_DATA_DIRS = [ "${mimeAppsList}/share" ];
 
       environment.pathsToLink = [
         "/share/nautilus-python/extensions"

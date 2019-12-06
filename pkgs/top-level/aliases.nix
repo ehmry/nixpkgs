@@ -48,7 +48,6 @@ mapAliases ({
   bar-xft = lemonbar-xft;  # added 2015-01-16
   bashCompletion = bash-completion; # Added 2016-09-28
   bridge_utils = bridge-utils;  # added 2015-02-20
-  bro = zeek; # added 2019-09-29
   btrfsProgs = btrfs-progs; # added 2016-01-03
   bittorrentSync = throw "bittorrentSync has been deprecated by resilio-sync."; # added 2019-06-03
   bittorrentSync14 = throw "bittorrentSync14 has been deprecated by resilio-sync."; # added 2019-06-03
@@ -117,7 +116,6 @@ mapAliases ({
   git-hub = gitAndTools.git-hub; # added 2016-04-29
   glib_networking = glib-networking; # added 2018-02-25
   gnome-mpv = celluloid; # added 2019-08-22
-  gmic_krita_qt = gmic-qt-krita; # added 2019-09-07
   gnome-themes-standard = gnome-themes-extra; # added 2018-03-14
   gnome_doc_utils = gnome-doc-utils; # added 2018-02-25
   gnome_themes_standard = gnome-themes-standard; # added 2018-02-25
@@ -192,14 +190,13 @@ mapAliases ({
   libintlOrEmpty = stdenv.lib.optional (!stdenv.isLinux || stdenv.hostPlatform.libc != "glibc") gettext; # added 2018-03-14
   libjson_rpc_cpp = libjson-rpc-cpp; # added 2017-02-28
   liblapackWithoutAtlas = liblapack; # added 2018-11-05
+  libmysql = mysql.connector-c; # added # 2017-12-28, this was a misnomer refering to libmysqlclient
   libqrencode = qrencode;  # added 2019-01-01
   librecad2 = librecad;  # backwards compatibility alias, added 2015-10
   libsysfs = sysfsutils; # added 2018-04-25
   libtidy = html-tidy;  # added 2014-12-21
   libudev = udev; # added 2018-04-25
   links = links2; # added 2016-01-31
-  linux_rpi0 = linux_rpi1;
-  linuxPackages_rpi0 = linuxPackages_rpi1;
   lttngTools = lttng-tools;  # added 2014-07-31
   lttngUst = lttng-ust;  # added 2014-07-31
   lua5_1_sockets = lua51Packages.luasocket; # added 2017-05-02
@@ -222,8 +219,6 @@ mapAliases ({
   mobile_broadband_provider_info = mobile-broadband-provider-info; # added 2018-02-25
   module_init_tools = kmod; # added 2016-04-22
   mono-zeroconf = throw "deprecated 2019-09-20: abandoned by upstream.";
-  mozart = mozart2-binary; # added 2019-09-23
-  mozart-binary = mozart2-binary; # added 2019-09-23
   mpich2 = mpich;  # added 2018-08-06
   msf = metasploit; # added 2018-04-25
   libmsgpack = msgpack; # added 2018-08-17
@@ -298,6 +293,8 @@ mapAliases ({
   pyo3-pack = maturin;
   pulseaudioLight = pulseaudio; # added 2018-04-25
   qca-qt5 = libsForQt5.qca-qt5;  # added 2015-12-19
+  qt_gstreamer = qt-gstreamer;  # added 2017-02
+  qt_gstreamer1 = qt-gstreamer1;  # added 2017-02
   quake3game = ioquake3; # added 2016-01-14
   qwt6 = libsForQt5.qwt;  # added 2015-12-19
   qtpfsgui = throw "Is now luminanceHDR"; # added 2019-06-26
@@ -369,14 +366,12 @@ mapAliases ({
   terraform-provider-libvirt = terraform-providers.libvirt; # added 2018-09-28
   terraform-provider-nixos = terraform-providers.nixos; # added 2018-09-28
   tesseract_4 = tesseract4; # added 2018-12-19
-  testdisk-photorec = throw "This package was a duplicate, please use testdisk or testdisk-qt instead"; # added 2019-10-13
   tex-gyre-bonum-math = tex-gyre-math.bonum; # added 2018-04-03
   tex-gyre-pagella-math = tex-gyre-math.pagella; # added 2018-04-03
   tex-gyre-schola-math = tex-gyre-math.schola; # added 2018-04-03
   tex-gyre-termes-math = tex-gyre-math.termes; # added 2018-04-03
   tftp_hpa = tftp-hpa; # added 2015-04-03
   torbrowser = tor-browser-bundle-bin; # added 2017-04-05
-  transporter = throw "transporter has been removed. It was archived upstream, so it's considered abandoned.";
   trang = jing-trang; # added 2018-04-25
   transmission_gtk = transmission-gtk; # added 2018-01-06
   transmission_remote_gtk = transmission-remote-gtk; # added 2018-01-06
@@ -434,7 +429,7 @@ mapAliases ({
     ocamlPackages_latest;
 
   gst_all = { # added 2018-04-25
-    inherit (pkgs) gstreamer gnonlin gst-python;
+    inherit (pkgs) gstreamer gnonlin gst-python qt-gstreamer;
     gstPluginsBase = pkgs.gst-plugins-base;
     gstPluginsBad = pkgs.gst-plugins-bad;
     gstPluginsGood = pkgs.gst-plugins-good;
@@ -446,8 +441,8 @@ mapAliases ({
   };
 
   # added 2019-08-01
-  mumble_git = pkgs.mumble;
-  murmur_git = pkgs.murmur;
+  mumble_git = pkgs.mumble_rc;
+  murmur_git = pkgs.murmur_rc;
 
   # added 2019-09-06
   zeroc_ice = pkgs.zeroc-ice;
