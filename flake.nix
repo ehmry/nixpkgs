@@ -30,7 +30,10 @@
         in listToAttrs list;
 
       crossPairs = forAllCrossSystems ({ system, localSystem, crossSystem }:
-        import ./. { inherit localSystem crossSystem; });
+        import ./. {
+          inherit localSystem crossSystem;
+          config.allowUnsupportedSystem = localSystem != crossSystem;
+        });
 
     in {
       lib = lib // { inherit forAllSystems forAllCrossSystems; };
