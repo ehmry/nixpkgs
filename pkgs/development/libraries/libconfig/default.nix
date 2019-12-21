@@ -9,7 +9,9 @@ stdenv.mkDerivation rec {
     sha256 = "1ngs2qx3cx5cbwinc5mvadly0b5n7s86zsc68c404czzfff7lg3w";
   };
 
-  doCheck = true;
+  patches = stdenv.lib.optional stdenv.targetPlatform.isGenode ./genode.patch;
+
+  checkPhase = null;
 
   meta = with stdenv.lib; {
     homepage = http://www.hyperrealm.com/libconfig;

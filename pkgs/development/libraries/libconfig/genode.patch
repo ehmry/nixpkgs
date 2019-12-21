@@ -1,0 +1,11 @@
+--- libconfig-1.7.2/aux-build/config.sub	2019-12-20 04:31:11.321382864 +0000
++++ libconfig-1.7.2/aux-build/config.sub.genode	2019-12-20 04:31:13.728486769 +0000
+@@ -1508,6 +1508,8 @@
+ 		;;
+ 	-nacl*)
+ 		;;
++	-genode*)
++		;;
+ 	-none)
+ 		;;
+ 	*)
