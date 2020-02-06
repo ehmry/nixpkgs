@@ -2468,8 +2468,6 @@ in
 
   cpuminer = callPackage ../tools/misc/cpuminer { };
 
-  cpuminer-multi = callPackage ../tools/misc/cpuminer-multi { };
-
   cryptpad = callPackage ../servers/web-apps/cryptpad { };
 
   ethash = callPackage ../development/libraries/ethash { };
