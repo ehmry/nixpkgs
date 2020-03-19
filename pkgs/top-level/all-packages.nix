@@ -18081,6 +18081,8 @@ in
 
   hasklig = callPackage ../data/fonts/hasklig {};
 
+  hk-grotesk = callPackage ../data/fonts/hk-grotesk {};
+
   interfacer = callPackage ../development/tools/interfacer { };
 
   maligned = callPackage ../development/tools/maligned { };
