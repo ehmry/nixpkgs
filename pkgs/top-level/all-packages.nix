@@ -5125,6 +5125,8 @@ in
 
   minetime = callPackage ../applications/office/minetime { };
 
+  minivmac = callPackage ../misc/emulators/minivmac { };
+
   minio-client = callPackage ../tools/networking/minio-client { };
 
   minissdpd = callPackage ../tools/networking/minissdpd { };
@@ -11176,8 +11178,7 @@ in
   boost16x = boost169;
   boost170 = callPackage ../development/libraries/boost/1.70.nix { };
   boost171 = callPackage ../development/libraries/boost/1.71.nix { };
-  boost172 = callPackage ../development/libraries/boost/1.72.nix { };
-  boost17x = boost172;
+  boost17x = boost171;
   boost = boost16x;
 
   boost_process = callPackage ../development/libraries/boost-process { };
@@ -15749,9 +15750,7 @@ in
 
   libpulseaudio = libpulseaudio-vanilla;
 
-  pulseeffects = callPackage ../applications/audio/pulseeffects {
-    boost = boost172;
-  };
+  pulseeffects = callPackage ../applications/audio/pulseeffects { };
 
   tomcat_connectors = callPackage ../servers/http/apache-modules/tomcat-connectors { };
 
@@ -18883,7 +18882,7 @@ in
 
   dablin = callPackage ../applications/radio/dablin { };
 
-  darcs = haskell.lib.overrideCabal (haskell.lib.justStaticExecutables haskell.packages.ghc865.darcs) (drv: {
+  darcs = haskell.lib.overrideCabal (haskell.lib.justStaticExecutables haskellPackages.darcs) (drv: {
     configureFlags = (stdenv.lib.remove "-flibrary" drv.configureFlags or []) ++ ["-f-library"];
   });
 
@@ -19926,8 +19925,6 @@ in
 
   swaylock-fancy = callPackage ../applications/window-managers/sway/lock-fancy.nix { };
 
-  swaylock-effects = callPackage ../applications/window-managers/sway/lock-effects.nix { };
-
   waybar = callPackage ../applications/misc/waybar {
     pulseSupport = config.pulseaudio or false;
   };
@@ -20245,8 +20242,6 @@ in
   };
 
   kodestudio = callPackage ../applications/editors/kodestudio { };
-
-  kondo = callPackage ../applications/misc/kondo { };
 
   konversation = libsForQt5.callPackage ../applications/networking/irc/konversation { };
 
@@ -23784,9 +23779,7 @@ in
 
   inherit (callPackage ../games/scummvm/games.nix { })
     beneath-a-steel-sky
-    broken-sword-25
     drascula-the-vampire-strikes-back
-    dreamweb
     flight-of-the-amazon-queen
     lure-of-the-temptress;
 
@@ -25896,7 +25889,11 @@ in
 
   jx = callPackage ../applications/networking/cluster/jx {};
 
-  prow = callPackage ../applications/networking/cluster/prow { };
+  prow = callPackage ../applications/networking/cluster/prow {
+    # Version 2019-08-14 fails to build with go 1.13 due to dependencies:
+    #   go: golang.org/x/lint@v0.0.0-20190301231843-5614ed5bae6f used for two different module paths (github.com/golang/lint and golang.org/x/lint)
+    buildGoModule = buildGo112Module;
+  };
 
   inherit (callPackage ../applications/networking/cluster/terraform {
     # terraform 0.12 crashes with go1.14 on darwin https://github.com/hashicorp/terraform/issues/24287
