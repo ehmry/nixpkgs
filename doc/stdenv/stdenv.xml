@@ -1885,6 +1885,16 @@ addEnvHooks "$hostOffset" myBashFunction
       </para>
      </listitem>
     </varlistentry>
+    <varlistentry>
+     <term>
+      <literal>updateAutotoolsGnuConfigScriptsHook</literal>
+     </term>
+     <listitem>
+      <para>
+       This updates any <filename>config.sub</filename> and <filename>config.guess</filename> files during the configuration phase. Use this hook to build packages with <filename>configure</filename> scripts that do not recognize recently defined platforms.
+      </para>
+     </listitem>
+    </varlistentry>
    </variablelist>
   </para>
 
