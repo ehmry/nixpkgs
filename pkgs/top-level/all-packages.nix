@@ -7227,6 +7227,8 @@ in
 
   variety = callPackage ../applications/misc/variety {};
 
+  vblade = callPackage ../tools/networking/vblade { };
+
   vdmfec = callPackage ../applications/backup/vdmfec {};
 
   vk-messenger = callPackage ../applications/networking/instant-messengers/vk-messenger {};
