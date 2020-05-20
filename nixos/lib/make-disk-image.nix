@@ -59,7 +59,7 @@ let format' = format; in let
     qcow2 = "qcow2";
     vpc   = "vhd";
     raw   = "img";
-  }.${format};
+  }.${format} or format;
 
   rootPartition = { # switch-case
     legacy = "1";
