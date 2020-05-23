@@ -158,7 +158,7 @@ let
           buildInputs = [ pkgs.utillinux ];
           QEMU_OPTS = if cfg.useEFIBoot
                       then "-pflash $out/bios.bin -nographic -serial pty"
-                      else "-nographic -serial pty";
+                      else "-nographic";
         }
         ''
           # Create a /boot EFI partition with 40M and arbitrary but fixed GUIDs for reproducibility
