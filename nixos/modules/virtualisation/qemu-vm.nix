@@ -157,7 +157,7 @@ let
             '';
           buildInputs = [ pkgs.utillinux ];
           QEMU_OPTS = if cfg.useEFIBoot
-                      then "-pflash $out/bios.bin -nographic -serial pty"
+                      then "-pflash $out/bios.bin -nographic"
                       else "-nographic";
         }
         ''
