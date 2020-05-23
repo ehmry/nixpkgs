@@ -148,7 +148,7 @@ let
               mkdir $out
               diskImage=$out/disk.img
               bootFlash=$out/bios.bin
-              ${qemu}/bin/qemu-img create -f qcow2 $diskImage "40M"
+              ${qemu}/bin/qemu-img create -f qcow2 $diskImage "128M"
               ${if cfg.useEFIBoot then ''
                 cp ${pkgs.OVMF-CSM.fd}/FV/OVMF.fd $bootFlash
                 chmod 0644 $bootFlash
