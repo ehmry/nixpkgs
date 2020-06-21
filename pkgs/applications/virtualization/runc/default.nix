@@ -9,11 +9,12 @@
 , apparmor-parser
 , libseccomp
 , libselinux
+, nixosTests
 }:
 
 buildGoPackage rec {
   pname = "runc";
-  version = "1.0.0-rc10";
+  version = "1.0.0-rc90";
 
   src = fetchFromGitHub {
     owner = "opencontainers";
@@ -44,6 +45,8 @@ buildGoPackage rec {
     install -Dm755 runc $out/bin/runc
     installManPage man/*/*.[1-9]
   '';
+
+  passthru.tests.podman = nixosTests.podman;
 
   meta = with lib; {
     homepage = "https://github.com/opencontainers/runc";

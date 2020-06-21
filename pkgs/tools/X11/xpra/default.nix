@@ -41,7 +41,9 @@ in buildPythonApplication rec {
     (substituteAll {
       src = ./fix-paths.patch;
       inherit (xorg) xkeyboardconfig;
+      inherit libfakeXinerama;
     })
+    ./fix-41106.patch
   ];
 
   postPatch = ''

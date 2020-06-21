@@ -22,9 +22,7 @@
 }:
 
 let
-  llvmPackages = if channel != "stable"
-    then llvmPackages_10
-    else llvmPackages_9;
+  llvmPackages = llvmPackages_10;
   stdenv = llvmPackages.stdenv;
 
   callPackage = newScope chromium;
@@ -36,8 +34,6 @@ let
 
     mkChromiumDerivation = callPackage ./common.nix ({
       inherit gnome gnomeSupport gnomeKeyringSupport proprietaryCodecs cupsSupport pulseSupport useOzone;
-      gnChromium = gn;
-    } // lib.optionalAttrs (channel != "stable") {
       # TODO: Remove after we can update gn for the stable channel (backward incompatible changes):
       gnChromium = gn.overrideAttrs (oldAttrs: {
         version = "2020-03-23";
@@ -45,6 +41,15 @@ let
           url = "https://gn.googlesource.com/gn";
           rev = "5ed3c9cc67b090d5e311e4bd2aba072173e82db9";
           sha256 = "00y2d35wvqmx9glaqhfb62wdgbfpwr77v0934nnvh9ks71vnsjqy";
+        };
+      });
+    } // lib.optionalAttrs (channel == "dev") {
+      gnChromium = gn.overrideAttrs (oldAttrs: {
+        version = "2020-05-19";
+        src = fetchgit {
+          url = "https://gn.googlesource.com/gn";
+          rev = "d0a6f072070988e7b038496c4e7d6c562b649732";
+          sha256 = "0197msabskgfbxvhzq73gc3wlr3n9cr4bzrhy5z5irbvy05lxk17";
         };
       });
     });
