@@ -9277,6 +9277,8 @@ in
   mozart2-binary = callPackage ../development/compilers/mozart/binary.nix { };
 
   nim = callPackage ../development/compilers/nim { };
+  nim-unwrapped = nim.unwrapped;
+  nim-stdlib = nim.stdlib;
   nrpl = callPackage ../development/tools/nrpl { };
 
   neko = callPackage ../development/compilers/neko { };

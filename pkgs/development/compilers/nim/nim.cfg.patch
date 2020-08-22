@@ -1,0 +1,22 @@
+commit f98701fba5de1a90adf0a3e27104cc63ca3fe916
+Author: Emery Hemingway <ehmry@posteo.net>
+Date:   Sat Aug 22 18:52:14 2020 +0200
+
+    Nix configuration to be replaced by substituteAll
+
+diff --git a/config/nim.cfg b/config/nim.cfg
+index 9f152b879..9054af797 100644
+--- a/config/nim.cfg
++++ b/config/nim.cfg
+@@ -8,7 +8,10 @@
+ # Environment variables can be accessed like so:
+ #  gcc.path %= "$CC_PATH"
+ 
+-cc = gcc
++os = @targetOs@
++cpu = @targetCpu@
++cc = @ccKind@
++define:nixbuild
+ 
+ # additional options always passed to the compiler:
+ --parallel_build: "0" # 0 to auto-detect number of processors
