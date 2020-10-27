@@ -106,6 +106,9 @@ in
 
   ### BUILD SUPPORT
 
+  absoluteLibrariesHook = makeSetupHook
+    { } ../build-support/setup-hooks/absolute-libraries.sh;
+
   auditBlasHook = makeSetupHook
     { name = "auto-blas-hook"; deps = [ blas lapack ]; }
     ../build-support/setup-hooks/audit-blas.sh;
