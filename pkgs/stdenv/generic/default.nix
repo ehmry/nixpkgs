@@ -55,7 +55,10 @@ let
     [ ../../build-support/setup-hooks/move-docs.sh
       ../../build-support/setup-hooks/make-symlinks-relative.sh
       ../../build-support/setup-hooks/compress-man-pages.sh
-      ../../build-support/setup-hooks/strip.sh
+     ( if hostPlatform.isGenode
+       then ../../build-support/setup-hooks/strip-better.sh
+       else ../../build-support/setup-hooks/strip.sh
+      )
       ../../build-support/setup-hooks/patch-shebangs.sh
       ../../build-support/setup-hooks/prune-libtool-files.sh
     ]
