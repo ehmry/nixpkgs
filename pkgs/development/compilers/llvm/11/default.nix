@@ -3,6 +3,7 @@
 , buildPackages
 , buildLlvmTools # tools, but from the previous stage, for cross
 , targetLlvmLibraries # libraries, but from the next stage, for cross
+, genodeBase
 }:
 
 let
@@ -111,7 +112,12 @@ let
         echo "--unwindlib=libunwind" >> $out/nix-support/cc-cflags
       '' + stdenv.lib.optionalString stdenv.targetPlatform.isWasm ''
         echo "-fno-exceptions" >> $out/nix-support/cc-cflags
-      '' + mkExtraBuildCommands cc;
+      '' + mkExtraBuildCommands cc
+      + stdenv.lib.optionalString stdenv.targetPlatform.isGenode ''
+        echo "-I${genodeBase}/include" >> $out/nix-support/cc-cflags
+        echo "--sysroot=${genodeBase}" >> $out/nix-support/cc-cflags
+        echo "-L ${genodeBase}" >> $out/nix-support/cc-cflags
+      '';
     };
 
     lldClangNoLibcxx = wrapCCWith rec {
@@ -127,7 +133,11 @@ let
         echo "-rtlib=compiler-rt" >> $out/nix-support/cc-cflags
         echo "-B${targetLlvmLibraries.compiler-rt}/lib" >> $out/nix-support/cc-cflags
         echo "-nostdlib++" >> $out/nix-support/cc-cflags
-      '' + mkExtraBuildCommands cc;
+      '' + mkExtraBuildCommands cc
+      + stdenv.lib.optionalString stdenv.targetPlatform.isGenode ''
+        echo "--sysroot=${genodeBase}" >> $out/nix-support/cc-cflags
+        echo "-L ${genodeBase}" >> $out/nix-support/cc-cflags
+      '';
     };
 
     lldClangNoLibc = wrapCCWith rec {
@@ -156,6 +166,8 @@ let
       extraPackages = [ ];
       extraBuildCommands = ''
         echo "-nostartfiles" >> $out/nix-support/cc-cflags
+      '' + stdenv.lib.optionalString stdenv.targetPlatform.isGenode ''
+        echo "--sysroot=${genodeBase}" >> $out/nix-support/cc-cflags
       '';
     };
 

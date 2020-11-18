@@ -9662,6 +9662,7 @@ julia_15 = callPackage ../development/compilers/julia/1.5.nix {
     inherit (stdenvAdapters) overrideCC;
     buildLlvmTools = buildPackages.llvmPackages_11.tools;
     targetLlvmLibraries = targetPackages.llvmPackages_11.libraries;
+    inherit (genodePackages.genodeSources) genodeBase;
   } // stdenv.lib.optionalAttrs (stdenv.hostPlatform.isi686 && buildPackages.stdenv.cc.isGNU) {
     stdenv = gcc7Stdenv;
   });

@@ -39,6 +39,7 @@ let
     patches = [
       ./purity.patch
       # https://reviews.llvm.org/D51899
+      ./genode.patch
     ];
 
     postPatch = ''

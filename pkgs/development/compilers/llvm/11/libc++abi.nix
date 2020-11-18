@@ -31,6 +31,8 @@ stdenv.mkDerivation {
     export TRIPLE=x86_64-apple-darwin
   '' + stdenv.lib.optionalString stdenv.hostPlatform.isMusl ''
     patch -p1 -d libcxx -i ${../libcxx-0001-musl-hacks.patch}
+  '' + stdenv.lib.optionalString stdenv.targetPlatform.isGenode ''
+    patch -p1 -d llvm -i ${./llvm-genode.patch}
   '' + stdenv.lib.optionalString stdenv.hostPlatform.isWasm ''
     patch -p1 -d llvm -i ${./libcxxabi-wasm.patch}
   '';

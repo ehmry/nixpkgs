@@ -1,0 +1,510 @@
+diff --git a/cmake/modules/HandleLLVMOptions.cmake b/cmake/modules/HandleLLVMOptions.cmake
+index 5ef22eb49..f40625c7e 100644
+--- a/cmake/modules/HandleLLVMOptions.cmake
++++ b/cmake/modules/HandleLLVMOptions.cmake
+@@ -132,7 +132,7 @@ if(WIN32)
+     set(LLVM_ON_UNIX 0)
+   endif(CYGWIN)
+ else(WIN32)
+-  if(FUCHSIA OR UNIX)
++  if(FUCHSIA OR GENODE OR UNIX)
+     set(LLVM_ON_WIN32 0)
+     set(LLVM_ON_UNIX 1)
+     if(APPLE OR ${CMAKE_SYSTEM_NAME} MATCHES "AIX")
+@@ -140,9 +140,9 @@ else(WIN32)
+     else()
+       set(LLVM_HAVE_LINK_VERSION_SCRIPT 1)
+     endif()
+-  else(FUCHSIA OR UNIX)
++  else(FUCHSIA OR GENODE OR UNIX)
+     MESSAGE(SEND_ERROR "Unable to determine platform")
+-  endif(FUCHSIA OR UNIX)
++  endif(FUCHSIA OR GENODE OR UNIX)
+ endif(WIN32)
+ 
+ set(EXEEXT ${CMAKE_EXECUTABLE_SUFFIX})
+diff --git a/include/llvm/ADT/Triple.h b/include/llvm/ADT/Triple.h
+index 6bad18f19..71f7fd956 100644
+--- a/include/llvm/ADT/Triple.h
++++ b/include/llvm/ADT/Triple.h
+@@ -166,6 +166,7 @@ public:
+     DragonFly,
+     FreeBSD,
+     Fuchsia,
++    Genode,
+     IOS,
+     KFreeBSD,
+     Linux,
+@@ -586,6 +587,11 @@ public:
+     return getOS() == Triple::KFreeBSD;
+   }
+ 
++  /// Tests whether the OS is Genode.
++  bool isOSGenode() const {
++    return getOS() == Triple::Genode;
++  }
++
+   /// Tests whether the OS is Hurd.
+   bool isOSHurd() const {
+     return getOS() == Triple::Hurd;
+diff --git a/include/llvm/BinaryFormat/ELF.h b/include/llvm/BinaryFormat/ELF.h
+index bdcf10fd1..46ed8e56c 100644
+--- a/include/llvm/BinaryFormat/ELF.h
++++ b/include/llvm/BinaryFormat/ELF.h
+@@ -348,6 +348,7 @@ enum {
+   ELFOSABI_AROS = 15,          // AROS
+   ELFOSABI_FENIXOS = 16,       // FenixOS
+   ELFOSABI_CLOUDABI = 17,      // Nuxi CloudABI
++  ELFOSABI_GENODE = 18,        // Genode
+   ELFOSABI_FIRST_ARCH = 64,    // First architecture-specific OS ABI
+   ELFOSABI_AMDGPU_HSA = 64,    // AMD HSA runtime
+   ELFOSABI_AMDGPU_PAL = 65,    // AMD PAL runtime
+diff --git a/include/llvm/CodeGen/Passes.h b/include/llvm/CodeGen/Passes.h
+index 9e5b4446c..a48b9f934 100644
+--- a/include/llvm/CodeGen/Passes.h
++++ b/include/llvm/CodeGen/Passes.h
+@@ -341,7 +341,7 @@ namespace llvm {
+ 
+   /// createDwarfEHPass - This pass mulches exception handling code into a form
+   /// adapted to code generation.  Required if using dwarf exception handling.
+-  FunctionPass *createDwarfEHPass(CodeGenOpt::Level OptLevel);
++  FunctionPass *createDwarfEHPass(CodeGenOpt::Level OptLevel, bool UseCxaEndCleanup);
+ 
+   /// createWinEHPass - Prepares personality functions used by MSVC on Windows,
+   /// in addition to the Itanium LSDA based personalities.
+diff --git a/include/llvm/IR/RuntimeLibcalls.def b/include/llvm/IR/RuntimeLibcalls.def
+index 903db6c70..31f18803e 100644
+--- a/include/llvm/IR/RuntimeLibcalls.def
++++ b/include/llvm/IR/RuntimeLibcalls.def
+@@ -417,6 +417,7 @@ HANDLE_LIBCALL(MEMSET_ELEMENT_UNORDERED_ATOMIC_16, "__llvm_memset_element_unorde
+ 
+ // Exception handling
+ HANDLE_LIBCALL(UNWIND_RESUME, "_Unwind_Resume")
++HANDLE_LIBCALL(CXA_END_CLEANUP, "__cxa_end_cleanup")
+ 
+ // Note: there are two sets of atomics libcalls; see
+ // <https://llvm.org/docs/Atomics.html> for more info on the
+diff --git a/include/llvm/MC/MCELFObjectWriter.h b/include/llvm/MC/MCELFObjectWriter.h
+index 8f78b99d3..7a1d1981f 100644
+--- a/include/llvm/MC/MCELFObjectWriter.h
++++ b/include/llvm/MC/MCELFObjectWriter.h
+@@ -74,6 +74,8 @@ public:
+     switch (OSType) {
+       case Triple::CloudABI:
+         return ELF::ELFOSABI_CLOUDABI;
++      case Triple::Genode:
++        return ELF::ELFOSABI_GENODE;
+       case Triple::HermitCore:
+         return ELF::ELFOSABI_STANDALONE;
+       case Triple::PS4:
+diff --git a/lib/CodeGen/DwarfEHPrepare.cpp b/lib/CodeGen/DwarfEHPrepare.cpp
+index c75c957bf..992ff65fc 100644
+--- a/lib/CodeGen/DwarfEHPrepare.cpp
++++ b/lib/CodeGen/DwarfEHPrepare.cpp
+@@ -49,10 +49,18 @@ namespace {
+     FunctionCallee RewindFunction = nullptr;
+ 
+     CodeGenOpt::Level OptLevel;
++    const bool IsArmEHABI;
+     DominatorTree *DT = nullptr;
+     const TargetLowering *TLI = nullptr;
+ 
+-    bool InsertUnwindResumeCalls(Function &Fn);
++    bool GetResumesVector(SmallVector<ResumeInst*, 16>&);
++    bool InsertABIResumeCall(Function &Fn);
++    bool InsertUnwindResumeCalls(Function &Fn,
++                                 SmallVector<ResumeInst*, 16> &Resumes,
++                                 size_t ResumesLeft);
++    bool InsertCxaEndCleanupCalls(Function &Fn,
++                                  SmallVector<ResumeInst*, 16> &Resumes,
++                                  size_t ResumesLeft);
+     Value *GetExceptionObject(ResumeInst *RI);
+     size_t
+     pruneUnreachableResumes(Function &Fn,
+@@ -62,8 +70,10 @@ namespace {
+   public:
+     static char ID; // Pass identification, replacement for typeid.
+ 
+-    DwarfEHPrepare(CodeGenOpt::Level OptLevel = CodeGenOpt::Default)
+-      : FunctionPass(ID), OptLevel(OptLevel) {}
++    DwarfEHPrepare(CodeGenOpt::Level OptLevel = CodeGenOpt::Default,
++                   bool IsArmEHABI = false)
++      : FunctionPass(ID), OptLevel(OptLevel),
++        IsArmEHABI(IsArmEHABI) {}
+ 
+     bool runOnFunction(Function &Fn) override;
+ 
+@@ -91,8 +101,9 @@ INITIALIZE_PASS_DEPENDENCY(TargetTransformInfoWrapperPass)
+ INITIALIZE_PASS_END(DwarfEHPrepare, DEBUG_TYPE,
+                     "Prepare DWARF exceptions", false, false)
+ 
+-FunctionPass *llvm::createDwarfEHPass(CodeGenOpt::Level OptLevel) {
+-  return new DwarfEHPrepare(OptLevel);
++FunctionPass *llvm::createDwarfEHPass(CodeGenOpt::Level OptLevel,
++                                      bool IsArmEHABI) {
++  return new DwarfEHPrepare(OptLevel, IsArmEHABI);
+ }
+ 
+ void DwarfEHPrepare::getAnalysisUsage(AnalysisUsage &AU) const {
+@@ -184,9 +195,9 @@ size_t DwarfEHPrepare::pruneUnreachableResumes(
+   return ResumesLeft;
+ }
+ 
+-/// InsertUnwindResumeCalls - Convert the ResumeInsts that are still present
+-/// into calls to the appropriate _Unwind_Resume function.
+-bool DwarfEHPrepare::InsertUnwindResumeCalls(Function &Fn) {
++/// InsertABIResumeCall - Convert the ResumeInsts that are still present
++/// into calls to the appropriate exception resume function.
++bool DwarfEHPrepare::InsertABIResumeCall(Function &Fn) {
+   SmallVector<ResumeInst*, 16> Resumes;
+   SmallVector<LandingPadInst*, 16> CleanupLPads;
+   for (BasicBlock &BB : Fn) {
+@@ -205,8 +216,6 @@ bool DwarfEHPrepare::InsertUnwindResumeCalls(Function &Fn) {
+   if (isScopedEHPersonality(Pers))
+     return false;
+ 
+-  LLVMContext &Ctx = Fn.getContext();
+-
+   size_t ResumesLeft = Resumes.size();
+   if (OptLevel != CodeGenOpt::None)
+     ResumesLeft = pruneUnreachableResumes(Fn, Resumes, CleanupLPads);
+@@ -214,6 +223,19 @@ bool DwarfEHPrepare::InsertUnwindResumeCalls(Function &Fn) {
+   if (ResumesLeft == 0)
+     return true; // We pruned them all.
+ 
++  const bool useCxaEndCleanup =
++      (Pers == EHPersonality::GNU_CXX) & IsArmEHABI;
++  if (useCxaEndCleanup)
++    return InsertCxaEndCleanupCalls(Fn, Resumes, ResumesLeft);
++  return InsertUnwindResumeCalls(Fn, Resumes, ResumesLeft);
++}
++
++/// InsertUnwindResumeCalls - Convert the ResumeInsts that are still present
++/// into calls to the appropriate _Unwind_Resume function.
++bool DwarfEHPrepare::InsertUnwindResumeCalls(
++    Function &Fn, SmallVector<ResumeInst*, 16> &Resumes, size_t ResumesLeft) {
++  LLVMContext &Ctx = Fn.getContext();
++
+   // Find the rewind function if we didn't already.
+   if (!RewindFunction) {
+     FunctionType *FTy = FunctionType::get(Type::getVoidTy(Ctx),
+@@ -264,13 +286,61 @@ bool DwarfEHPrepare::InsertUnwindResumeCalls(Function &Fn) {
+   return true;
+ }
+ 
++bool DwarfEHPrepare::InsertCxaEndCleanupCalls(
++    Function &Fn, SmallVector<ResumeInst*, 16> &Resumes,
++    size_t ResumesLeft) {
++  LLVMContext &Ctx = Fn.getContext();
++
++  if (!RewindFunction) {
++    FunctionType *FTy = FunctionType::get(Type::getVoidTy(Ctx), false);
++    const char *RewindName = TLI->getLibcallName(RTLIB::CXA_END_CLEANUP);
++    RewindFunction = Fn.getParent()->getOrInsertFunction(RewindName, FTy);
++  }
++
++  // Create the basic block where the __cxa_end_cleanup call will live.
++  if (ResumesLeft == 1) {
++    // Instead of creating a new BB just append the call to
++    // __cxa_end_cleanup to the end of the single resume block.
++    ResumeInst *RI = Resumes.front();
++    BasicBlock *UnwindBB = RI->getParent();
++
++    RI->eraseFromParent();
++
++    // Call the __cxa_end_cleanup function.
++    CallInst *CI = CallInst::Create(RewindFunction, "", UnwindBB);
++    CI->setCallingConv(TLI->getLibcallCallingConv(RTLIB::CXA_END_CLEANUP));
++
++    // We never expect _Unwind_Resume to return.
++    new UnreachableInst(Ctx, UnwindBB);
++    return true;
++  }
++
++  BasicBlock *UnwindBB = BasicBlock::Create(Ctx, "unwind_resume", &Fn);
++
++  for (ResumeInst *RI : Resumes) {
++    BasicBlock *Parent = RI->getParent();
++    BranchInst::Create(UnwindBB, Parent);
++
++    RI->eraseFromParent();
++
++    ++NumResumesLowered;
++  }
++
++  CallInst *CI = CallInst::Create(RewindFunction,  "", UnwindBB);
++  CI->setCallingConv(TLI->getLibcallCallingConv(RTLIB::CXA_END_CLEANUP));
++
++  // We never expect __cxa_end_cleanup to return.
++  new UnreachableInst(Ctx, UnwindBB);
++  return true;
++}
++
+ bool DwarfEHPrepare::runOnFunction(Function &Fn) {
+   const TargetMachine &TM =
+       getAnalysis<TargetPassConfig>().getTM<TargetMachine>();
+   DT = OptLevel != CodeGenOpt::None
+       ? &getAnalysis<DominatorTreeWrapperPass>().getDomTree() : nullptr;
+   TLI = TM.getSubtargetImpl(Fn)->getTargetLowering();
+-  bool Changed = InsertUnwindResumeCalls(Fn);
++  bool Changed = InsertABIResumeCall(Fn);
+   DT = nullptr;
+   TLI = nullptr;
+   return Changed;
+diff --git a/lib/CodeGen/TargetPassConfig.cpp b/lib/CodeGen/TargetPassConfig.cpp
+index e0fdb0cef..4da3325b8 100644
+--- a/lib/CodeGen/TargetPassConfig.cpp
++++ b/lib/CodeGen/TargetPassConfig.cpp
+@@ -729,15 +729,17 @@ void TargetPassConfig::addPassesToHandleExceptions() {
+     addPass(createSjLjEHPreparePass(TM));
+     LLVM_FALLTHROUGH;
+   case ExceptionHandling::DwarfCFI:
++    addPass(createDwarfEHPass(getOptLevel(), false));
++    break;
+   case ExceptionHandling::ARM:
+-    addPass(createDwarfEHPass(getOptLevel()));
++    addPass(createDwarfEHPass(getOptLevel(), true));
+     break;
+   case ExceptionHandling::WinEH:
+     // We support using both GCC-style and MSVC-style exceptions on Windows, so
+     // add both preparation passes. Each pass will only actually run if it
+     // recognizes the personality function.
+     addPass(createWinEHPass());
+-    addPass(createDwarfEHPass(getOptLevel()));
++    addPass(createDwarfEHPass(getOptLevel(), false));
+     break;
+   case ExceptionHandling::Wasm:
+     // Wasm EH uses Windows EH instructions, but it does not need to demote PHIs
+diff --git a/lib/ObjectYAML/ELFYAML.cpp b/lib/ObjectYAML/ELFYAML.cpp
+index 2353b34f1..e93f53c40 100644
+--- a/lib/ObjectYAML/ELFYAML.cpp
++++ b/lib/ObjectYAML/ELFYAML.cpp
+@@ -268,6 +268,7 @@ void ScalarEnumerationTraits<ELFYAML::ELF_ELFOSABI>::enumeration(
+   ECase(ELFOSABI_AROS);
+   ECase(ELFOSABI_FENIXOS);
+   ECase(ELFOSABI_CLOUDABI);
++  ECase(ELFOSABI_GENODE);
+   ECase(ELFOSABI_AMDGPU_HSA);
+   ECase(ELFOSABI_AMDGPU_PAL);
+   ECase(ELFOSABI_AMDGPU_MESA3D);
+diff --git a/lib/Support/Triple.cpp b/lib/Support/Triple.cpp
+index fec1985cc..1f3e4f07f 100644
+--- a/lib/Support/Triple.cpp
++++ b/lib/Support/Triple.cpp
+@@ -197,6 +197,7 @@ StringRef Triple::getOSTypeName(OSType Kind) {
+   case Emscripten: return "emscripten";
+   case FreeBSD: return "freebsd";
+   case Fuchsia: return "fuchsia";
++  case Genode: return "genode";
+   case Haiku: return "haiku";
+   case HermitCore: return "hermit";
+   case Hurd: return "hurd";
+@@ -494,6 +495,7 @@ static Triple::OSType parseOS(StringRef OSName) {
+     .StartsWith("dragonfly", Triple::DragonFly)
+     .StartsWith("freebsd", Triple::FreeBSD)
+     .StartsWith("fuchsia", Triple::Fuchsia)
++    .StartsWith("genode", Triple::Genode)
+     .StartsWith("ios", Triple::IOS)
+     .StartsWith("kfreebsd", Triple::KFreeBSD)
+     .StartsWith("linux", Triple::Linux)
+diff --git a/test/CodeGen/ARM/debug-frame.ll b/test/CodeGen/ARM/debug-frame.ll
+index b561be465..cfd439ef9 100644
+--- a/test/CodeGen/ARM/debug-frame.ll
++++ b/test/CodeGen/ARM/debug-frame.ll
+@@ -197,29 +197,28 @@ declare void @_ZSt9terminatev()
+ 
+ ; CHECK-V7-FP-LABEL: _Z4testiiiiiddddd:
+ ; CHECK-V7-FP:   .cfi_startproc
+-; CHECK-V7-FP:   push   {r4, r10, r11, lr}
+-; CHECK-V7-FP:   .cfi_def_cfa_offset 16
++; CHECK-V7-FP:   push   {r11, lr}
++; CHECK-V7-FP:   .cfi_def_cfa_offset 8
+ ; CHECK-V7-FP:   .cfi_offset lr, -4
+ ; CHECK-V7-FP:   .cfi_offset r11, -8
+-; CHECK-V7-FP:   .cfi_offset r10, -12
+-; CHECK-V7-FP:   .cfi_offset r4, -16
+-; CHECK-V7-FP:   add    r11, sp, #8
+-; CHECK-V7-FP:   .cfi_def_cfa r11, 8
++; CHECK-V7-FP:   .setfp r11, sp
++; CHECK-V7-FP:   mov    r11, sp
++; CHECK-V7-FP:   .cfi_def_cfa_register r11
+ ; CHECK-V7-FP:   vpush  {d8, d9, d10, d11, d12}
+-; CHECK-V7-FP:   .cfi_offset d12, -24
+-; CHECK-V7-FP:   .cfi_offset d11, -32
+-; CHECK-V7-FP:   .cfi_offset d10, -40
+-; CHECK-V7-FP:   .cfi_offset d9, -48
+-; CHECK-V7-FP:   .cfi_offset d8, -56
++; CHECK-V7-FP:   .cfi_offset d12, -16
++; CHECK-V7-FP:   .cfi_offset d11, -24
++; CHECK-V7-FP:   .cfi_offset d10, -32
++; CHECK-V7-FP:   .cfi_offset d9, -40
++; CHECK-V7-FP:   .cfi_offset d8, -48
+ ; CHECK-V7-FP:   sub    sp, sp, #24
+ ; CHECK-V7-FP:   .cfi_endproc
+ 
+ ; CHECK-V7-FP-ELIM-LABEL: _Z4testiiiiiddddd:
+ ; CHECK-V7-FP-ELIM:   .cfi_startproc
+-; CHECK-V7-FP-ELIM:   push   {r4, lr}
++; CHECK-V7-FP-ELIM:   push   {r11, lr}
+ ; CHECK-V7-FP-ELIM:   .cfi_def_cfa_offset 8
+ ; CHECK-V7-FP-ELIM:   .cfi_offset lr, -4
+-; CHECK-V7-FP-ELIM:   .cfi_offset r4, -8
++; CHECK-V7-FP-ELIM:   .cfi_offset r11, -8
+ ; CHECK-V7-FP-ELIM:   vpush  {d8, d9, d10, d11, d12}
+ ; CHECK-V7-FP-ELIM:   .cfi_def_cfa_offset 48
+ ; CHECK-V7-FP-ELIM:   .cfi_offset d12, -16
+@@ -260,29 +259,27 @@ declare void @_ZSt9terminatev()
+ 
+ ; CHECK-THUMB-V7-FP-LABEL: _Z4testiiiiiddddd:
+ ; CHECK-THUMB-V7-FP:   .cfi_startproc
+-; CHECK-THUMB-V7-FP:   push   {r4, r6, r7, lr}
+-; CHECK-THUMB-V7-FP:   .cfi_def_cfa_offset 16
++; CHECK-THUMB-V7-FP:   push   {r7, lr}
++; CHECK-THUMB-V7-FP:   .cfi_def_cfa_offset 8
+ ; CHECK-THUMB-V7-FP:   .cfi_offset lr, -4
+ ; CHECK-THUMB-V7-FP:   .cfi_offset r7, -8
+-; CHECK-THUMB-V7-FP:   .cfi_offset r6, -12
+-; CHECK-THUMB-V7-FP:   .cfi_offset r4, -16
+-; CHECK-THUMB-V7-FP:   add    r7, sp, #8
+-; CHECK-THUMB-V7-FP:   .cfi_def_cfa r7, 8
++; CHECK-THUMB-V7-FP:   mov    r7, sp
++; CHECK-THUMB-V7-FP:   .cfi_def_cfa_register r7
+ ; CHECK-THUMB-V7-FP:   vpush  {d8, d9, d10, d11, d12}
+-; CHECK-THUMB-V7-FP:   .cfi_offset d12, -24
+-; CHECK-THUMB-V7-FP:   .cfi_offset d11, -32
+-; CHECK-THUMB-V7-FP:   .cfi_offset d10, -40
+-; CHECK-THUMB-V7-FP:   .cfi_offset d9, -48
+-; CHECK-THUMB-V7-FP:   .cfi_offset d8, -56
++; CHECK-THUMB-V7-FP:   .cfi_offset d12, -16
++; CHECK-THUMB-V7-FP:   .cfi_offset d11, -24
++; CHECK-THUMB-V7-FP:   .cfi_offset d10, -32
++; CHECK-THUMB-V7-FP:   .cfi_offset d9, -40
++; CHECK-THUMB-V7-FP:   .cfi_offset d8, -48
+ ; CHECK-THUMB-V7-FP:   sub    sp, #24
+ ; CHECK-THUMB-V7-FP:   .cfi_endproc
+ 
+ ; CHECK-THUMB-V7-FP-ELIM-LABEL: _Z4testiiiiiddddd:
+ ; CHECK-THUMB-V7-FP-ELIM:   .cfi_startproc
+-; CHECK-THUMB-V7-FP-ELIM:   push   {r4, lr}
++; CHECK-THUMB-V7-FP-ELIM:   push   {r7, lr}
+ ; CHECK-THUMB-V7-FP-ELIM:   .cfi_def_cfa_offset 8
+ ; CHECK-THUMB-V7-FP-ELIM:   .cfi_offset lr, -4
+-; CHECK-THUMB-V7-FP-ELIM:   .cfi_offset r4, -8
++; CHECK-THUMB-V7-FP-ELIM:   .cfi_offset r7, -8
+ ; CHECK-THUMB-V7-FP-ELIM:   vpush  {d8, d9, d10, d11, d12}
+ ; CHECK-THUMB-V7-FP-ELIM:   .cfi_def_cfa_offset 48
+ ; CHECK-THUMB-V7-FP-ELIM:   .cfi_offset d12, -16
+@@ -296,20 +293,18 @@ declare void @_ZSt9terminatev()
+ 
+ ; CHECK-THUMB-V7-FP-NOIAS-LABEL: _Z4testiiiiiddddd:
+ ; CHECK-THUMB-V7-FP-NOIAS:   .cfi_startproc
+-; CHECK-THUMB-V7-FP-NOIAS:   push   {r4, r6, r7, lr}
+-; CHECK-THUMB-V7-FP-NOIAS:   .cfi_def_cfa_offset 16
++; CHECK-THUMB-V7-FP-NOIAS:   push   {r7, lr}
++; CHECK-THUMB-V7-FP-NOIAS:   .cfi_def_cfa_offset 8
+ ; CHECK-THUMB-V7-FP-NOIAS:   .cfi_offset 14, -4
+ ; CHECK-THUMB-V7-FP-NOIAS:   .cfi_offset 7, -8
+-; CHECK-THUMB-V7-FP-NOIAS:   .cfi_offset 6, -12
+-; CHECK-THUMB-V7-FP-NOIAS:   .cfi_offset 4, -16
+-; CHECK-THUMB-V7-FP-NOIAS:   add    r7, sp, #8
+-; CHECK-THUMB-V7-FP-NOIAS:   .cfi_def_cfa 7, 8
++; CHECK-THUMB-V7-FP-NOIAS:   mov    r7, sp
++; CHECK-THUMB-V7-FP-NOIAS:   .cfi_def_cfa_register 7
+ ; CHECK-THUMB-V7-FP-NOIAS:   vpush  {d8, d9, d10, d11, d12}
+-; CHECK-THUMB-V7-FP-NOIAS:   .cfi_offset 268, -24
+-; CHECK-THUMB-V7-FP-NOIAS:   .cfi_offset 267, -32
+-; CHECK-THUMB-V7-FP-NOIAS:   .cfi_offset 266, -40
+-; CHECK-THUMB-V7-FP-NOIAS:   .cfi_offset 265, -48
+-; CHECK-THUMB-V7-FP-NOIAS:   .cfi_offset 264, -56
++; CHECK-THUMB-V7-FP-NOIAS:   .cfi_offset 268, -16
++; CHECK-THUMB-V7-FP-NOIAS:   .cfi_offset 267, -24
++; CHECK-THUMB-V7-FP-NOIAS:   .cfi_offset 266, -32
++; CHECK-THUMB-V7-FP-NOIAS:   .cfi_offset 265, -40
++; CHECK-THUMB-V7-FP-NOIAS:   .cfi_offset 264, -48
+ ; CHECK-THUMB-V7-FP-NOIAS:   sub    sp, #24
+ ; CHECK-THUMB-V7-FP-NOIAS:   .cfi_endproc
+ 
+diff --git a/test/CodeGen/ARM/ehabi.ll b/test/CodeGen/ARM/ehabi.ll
+index 5c4a2b620..7bc719a34 100644
+--- a/test/CodeGen/ARM/ehabi.ll
++++ b/test/CodeGen/ARM/ehabi.ll
+@@ -181,10 +181,10 @@ declare void @_ZSt9terminatev()
+ 
+ ; CHECK-V7-FP-LABEL: _Z4testiiiiiddddd:
+ ; CHECK-V7-FP:   .fnstart
+-; CHECK-V7-FP:   .save  {r4, r10, r11, lr}
+-; CHECK-V7-FP:   push   {r4, r10, r11, lr}
+-; CHECK-V7-FP:   .setfp r11, sp, #8
+-; CHECK-V7-FP:   add    r11, sp, #8
++; CHECK-V7-FP:   .save  {r11, lr}
++; CHECK-V7-FP:   push   {r11, lr}
++; CHECK-V7-FP:   .setfp r11, sp
++; CHECK-V7-FP:   mov    r11, sp
+ ; CHECK-V7-FP:   .vsave {d8, d9, d10, d11, d12}
+ ; CHECK-V7-FP:   vpush  {d8, d9, d10, d11, d12}
+ ; CHECK-V7-FP:   .pad   #24
+@@ -195,8 +195,8 @@ declare void @_ZSt9terminatev()
+ 
+ ; CHECK-V7-FP-ELIM-LABEL: _Z4testiiiiiddddd:
+ ; CHECK-V7-FP-ELIM:   .fnstart
+-; CHECK-V7-FP-ELIM:   .save  {r4, lr}
+-; CHECK-V7-FP-ELIM:   push   {r4, lr}
++; CHECK-V7-FP-ELIM:   .save  {r11, lr}
++; CHECK-V7-FP-ELIM:   push   {r11, lr}
+ ; CHECK-V7-FP-ELIM:   .vsave {d8, d9, d10, d11, d12}
+ ; CHECK-V7-FP-ELIM:   vpush  {d8, d9, d10, d11, d12}
+ ; CHECK-V7-FP-ELIM:   .pad   #24
+diff --git a/tools/llvm-readobj/ELFDumper.cpp b/tools/llvm-readobj/ELFDumper.cpp
+index 15076f1f8..b0636e7eb 100644
+--- a/tools/llvm-readobj/ELFDumper.cpp
++++ b/tools/llvm-readobj/ELFDumper.cpp
+@@ -1334,6 +1334,7 @@ static const EnumEntry<unsigned> ElfOSABI[] = {
+   {"AROS",         "AROS",                 ELF::ELFOSABI_AROS},
+   {"FenixOS",      "FenixOS",              ELF::ELFOSABI_FENIXOS},
+   {"CloudABI",     "CloudABI",             ELF::ELFOSABI_CLOUDABI},
++  {"Genode",       "Genode",               ELF::ELFOSABI_GENODE},
+   {"Standalone",   "Standalone App",       ELF::ELFOSABI_STANDALONE}
+ };
+ 
+diff --git a/unittests/ADT/TripleTest.cpp b/unittests/ADT/TripleTest.cpp
+index dc7a28c72..eb62772c1 100644
+--- a/unittests/ADT/TripleTest.cpp
++++ b/unittests/ADT/TripleTest.cpp
+@@ -248,6 +248,12 @@ TEST(TripleTest, ParsedIDs) {
+   EXPECT_EQ(Triple::Fuchsia, T.getOS());
+   EXPECT_EQ(Triple::UnknownEnvironment, T.getEnvironment());
+ 
++  T = Triple("x86_64-unknown-genode");
++  EXPECT_EQ(Triple::x86_64, T.getArch());
++  EXPECT_EQ(Triple::UnknownVendor, T.getVendor());
++  EXPECT_EQ(Triple::Genode, T.getOS());
++  EXPECT_EQ(Triple::UnknownEnvironment, T.getEnvironment());
++
+   T = Triple("x86_64-unknown-hermit");
+   EXPECT_EQ(Triple::x86_64, T.getArch());
+   EXPECT_EQ(Triple::UnknownVendor, T.getVendor());
+diff --git a/utils/benchmark/src/internal_macros.h b/utils/benchmark/src/internal_macros.h
+index f2d54bfcb..e20f891d4 100644
+--- a/utils/benchmark/src/internal_macros.h
++++ b/utils/benchmark/src/internal_macros.h
+@@ -65,6 +65,8 @@
+ #define BENCHMARK_OS_FUCHSIA 1
+ #elif defined (__SVR4) && defined (__sun)
+ #define BENCHMARK_OS_SOLARIS 1
++#elif defined(__GENODE__)
++  #define BENCHMARK_OS_GENODE 1
+ #endif
+ 
+ #if !__has_feature(cxx_exceptions) && !defined(__cpp_exceptions) \
+diff --git a/utils/gn/secondary/clang/lib/Driver/BUILD.gn b/utils/gn/secondary/clang/lib/Driver/BUILD.gn
+index 04d483a12..e487a9a9a 100644
+--- a/utils/gn/secondary/clang/lib/Driver/BUILD.gn
++++ b/utils/gn/secondary/clang/lib/Driver/BUILD.gn
+@@ -66,6 +66,7 @@ static_library("Driver") {
+     "ToolChains/Flang.cpp",
+     "ToolChains/FreeBSD.cpp",
+     "ToolChains/Fuchsia.cpp",
++    "ToolChains/Genode.cpp",
+     "ToolChains/Gnu.cpp",
+     "ToolChains/HIP.cpp",
+     "ToolChains/Haiku.cpp",

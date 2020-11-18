@@ -1,0 +1,590 @@
+diff --git a/include/clang/Driver/Options.td b/include/clang/Driver/Options.td
+index 966cb907b..5bcd5093b 100644
+--- a/include/clang/Driver/Options.td
++++ b/include/clang/Driver/Options.td
+@@ -2709,6 +2709,7 @@ def nolibc : Flag<["-"], "nolibc">;
+ def nomultidefs : Flag<["-"], "nomultidefs">;
+ def nopie : Flag<["-"], "nopie">;
+ def no_pie : Flag<["-"], "no-pie">, Alias<nopie>;
++def noposix : Flag<["-"], "noposix">;
+ def noprebind : Flag<["-"], "noprebind">;
+ def noprofilelib : Flag<["-"], "noprofilelib">;
+ def noseglinkedit : Flag<["-"], "noseglinkedit">;
+diff --git a/lib/Basic/Targets.cpp b/lib/Basic/Targets.cpp
+index 965f27389..843a0b3c4 100644
+--- a/lib/Basic/Targets.cpp
++++ b/lib/Basic/Targets.cpp
+@@ -142,6 +142,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
+       return new FreeBSDTargetInfo<AArch64leTargetInfo>(Triple, Opts);
+     case llvm::Triple::Fuchsia:
+       return new FuchsiaTargetInfo<AArch64leTargetInfo>(Triple, Opts);
++    case llvm::Triple::Genode:
++      return new GenodeTargetInfo<AArch64leTargetInfo>(Triple, Opts);
+     case llvm::Triple::Linux:
+       return new LinuxTargetInfo<AArch64leTargetInfo>(Triple, Opts);
+     case llvm::Triple::NetBSD:
+@@ -166,6 +168,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
+       return new FreeBSDTargetInfo<AArch64beTargetInfo>(Triple, Opts);
+     case llvm::Triple::Fuchsia:
+       return new FuchsiaTargetInfo<AArch64beTargetInfo>(Triple, Opts);
++    case llvm::Triple::Genode:
++      return new GenodeTargetInfo<AArch64beTargetInfo>(Triple, Opts);
+     case llvm::Triple::Linux:
+       return new LinuxTargetInfo<AArch64beTargetInfo>(Triple, Opts);
+     case llvm::Triple::NetBSD:
+@@ -186,6 +190,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
+       return new LinuxTargetInfo<ARMleTargetInfo>(Triple, Opts);
+     case llvm::Triple::FreeBSD:
+       return new FreeBSDTargetInfo<ARMleTargetInfo>(Triple, Opts);
++    case llvm::Triple::Genode:
++      return new GenodeTargetInfo<ARMleTargetInfo>(Triple, Opts);
+     case llvm::Triple::NetBSD:
+       return new NetBSDTargetInfo<ARMleTargetInfo>(Triple, Opts);
+     case llvm::Triple::OpenBSD:
+@@ -485,6 +491,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
+       return new FreeBSDTargetInfo<X86_32TargetInfo>(Triple, Opts);
+     case llvm::Triple::Fuchsia:
+       return new FuchsiaTargetInfo<X86_32TargetInfo>(Triple, Opts);
++    case llvm::Triple::Genode:
++      return new GenodeI386TargetInfo(Triple, Opts);
+     case llvm::Triple::KFreeBSD:
+       return new KFreeBSDTargetInfo<X86_32TargetInfo>(Triple, Opts);
+     case llvm::Triple::Minix:
+@@ -561,6 +569,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
+     }
+     case llvm::Triple::Haiku:
+       return new HaikuTargetInfo<X86_64TargetInfo>(Triple, Opts);
++    case llvm::Triple::Genode:
++      return new GenodeTargetInfo<X86_64TargetInfo>(Triple, Opts);
+     case llvm::Triple::NaCl:
+       return new NaClTargetInfo<X86_64TargetInfo>(Triple, Opts);
+     case llvm::Triple::PS4:
+diff --git a/lib/Basic/Targets/AArch64.cpp b/lib/Basic/Targets/AArch64.cpp
+index 25c02cb88..8b9a62286 100644
+--- a/lib/Basic/Targets/AArch64.cpp
++++ b/lib/Basic/Targets/AArch64.cpp
+@@ -43,7 +43,7 @@ const Builtin::Info AArch64TargetInfo::BuiltinInfo[] = {
+ AArch64TargetInfo::AArch64TargetInfo(const llvm::Triple &Triple,
+                                      const TargetOptions &Opts)
+     : TargetInfo(Triple), ABI("aapcs") {
+-  if (getTriple().isOSOpenBSD()) {
++  if (getTriple().isOSOpenBSD() || getTriple().isOSGenode()) {
+     Int64Type = SignedLongLong;
+     IntMaxType = SignedLongLong;
+   } else {
+diff --git a/lib/Basic/Targets/ARM.cpp b/lib/Basic/Targets/ARM.cpp
+index 21cfe0107..b02ef0aa0 100644
+--- a/lib/Basic/Targets/ARM.cpp
++++ b/lib/Basic/Targets/ARM.cpp
+@@ -238,18 +238,19 @@ ARMTargetInfo::ARMTargetInfo(const llvm::Triple &Triple,
+       HW_FP(0) {
+   bool IsOpenBSD = Triple.isOSOpenBSD();
+   bool IsNetBSD = Triple.isOSNetBSD();
++  bool IsGenode = Triple.isOSGenode();
+ 
+   // FIXME: the isOSBinFormatMachO is a workaround for identifying a Darwin-like
+   // environment where size_t is `unsigned long` rather than `unsigned int`
+ 
+   PtrDiffType = IntPtrType =
+       (Triple.isOSDarwin() || Triple.isOSBinFormatMachO() || IsOpenBSD ||
+-       IsNetBSD)
++       IsNetBSD || IsGenode)
+           ? SignedLong
+           : SignedInt;
+ 
+   SizeType = (Triple.isOSDarwin() || Triple.isOSBinFormatMachO() || IsOpenBSD ||
+-              IsNetBSD)
++              IsNetBSD || IsGenode)
+                  ? UnsignedLong
+                  : UnsignedInt;
+ 
+diff --git a/lib/Basic/Targets/OSTargets.h b/lib/Basic/Targets/OSTargets.h
+index 2a9e4f91d..651a5222b 100644
+--- a/lib/Basic/Targets/OSTargets.h
++++ b/lib/Basic/Targets/OSTargets.h
+@@ -286,6 +286,39 @@ public:
+       : OSTargetInfo<Target>(Triple, Opts) {}
+ };
+ 
++// Genode Target
++template <typename Target>
++class LLVM_LIBRARY_VISIBILITY GenodeTargetInfo : public OSTargetInfo<Target> {
++protected:
++  void getOSDefines(const LangOptions &Opts, const llvm::Triple &Triple,
++                    MacroBuilder &Builder) const override {
++    Builder.defineMacro("__GENODE__");
++    DefineStd(Builder, "unix", Opts);
++    Builder.defineMacro("__ELF__");
++    if (Opts.POSIXThreads)
++      Builder.defineMacro("_REENTRANT");
++    if (this->HasFloat128)
++      Builder.defineMacro("__FLOAT128__");
++  }
++
++public:
++  GenodeTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
++      : OSTargetInfo<Target>(Triple, Opts) {
++    this->IntMaxType = TargetInfo::SignedLongLong;
++    this->Int64Type = TargetInfo::SignedLongLong;
++    this->SizeType = TargetInfo::UnsignedLong;
++    this->TLSSupported = false;
++    switch (Triple.getArch()) {
++    default:
++      break;
++    case llvm::Triple::x86:
++    case llvm::Triple::x86_64:
++      this->HasFloat128 = true;
++      break;
++    }
++  }
++};
++
+ // Haiku Target
+ template <typename Target>
+ class LLVM_LIBRARY_VISIBILITY HaikuTargetInfo : public OSTargetInfo<Target> {
+diff --git a/lib/Basic/Targets/X86.h b/lib/Basic/Targets/X86.h
+index 72a01d251..6c5c0065c 100644
+--- a/lib/Basic/Targets/X86.h
++++ b/lib/Basic/Targets/X86.h
+@@ -447,6 +447,17 @@ public:
+   }
+ };
+ 
++class LLVM_LIBRARY_VISIBILITY GenodeI386TargetInfo
++    : public GenodeTargetInfo<X86_32TargetInfo> {
++public:
++  GenodeI386TargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
++      : GenodeTargetInfo<X86_32TargetInfo>(Triple, Opts) {
++    SizeType = UnsignedLong;
++    IntPtrType = SignedLong;
++    PtrDiffType = SignedLong;
++  }
++};
++
+ class LLVM_LIBRARY_VISIBILITY DarwinI386TargetInfo
+     : public DarwinTargetInfo<X86_32TargetInfo> {
+ public:
+diff --git a/lib/Driver/CMakeLists.txt b/lib/Driver/CMakeLists.txt
+index 9463ca5c1..5ae757f99 100644
+--- a/lib/Driver/CMakeLists.txt
++++ b/lib/Driver/CMakeLists.txt
+@@ -49,6 +49,7 @@ add_clang_library(clangDriver
+   ToolChains/Flang.cpp
+   ToolChains/FreeBSD.cpp
+   ToolChains/Fuchsia.cpp
++  ToolChains/Genode.cpp
+   ToolChains/Gnu.cpp
+   ToolChains/Haiku.cpp
+   ToolChains/HIP.cpp
+diff --git a/lib/Driver/Driver.cpp b/lib/Driver/Driver.cpp
+index ece8222dc..650de46eb 100644
+--- a/lib/Driver/Driver.cpp
++++ b/lib/Driver/Driver.cpp
+@@ -22,6 +22,7 @@
+ #include "ToolChains/DragonFly.h"
+ #include "ToolChains/FreeBSD.h"
+ #include "ToolChains/Fuchsia.h"
++#include "ToolChains/Genode.h"
+ #include "ToolChains/Gnu.h"
+ #include "ToolChains/HIP.h"
+ #include "ToolChains/Haiku.h"
+@@ -4919,6 +4920,9 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
+     case llvm::Triple::FreeBSD:
+       TC = std::make_unique<toolchains::FreeBSD>(*this, Target, Args);
+       break;
++    case llvm::Triple::Genode:
++      TC = std::make_unique<toolchains::Genode>(*this, Target, Args);
++      break;
+     case llvm::Triple::Minix:
+       TC = std::make_unique<toolchains::Minix>(*this, Target, Args);
+       break;
+diff --git a/lib/Driver/SanitizerArgs.cpp b/lib/Driver/SanitizerArgs.cpp
+index bcc9ffc7f..7d02b3766 100644
+--- a/lib/Driver/SanitizerArgs.cpp
++++ b/lib/Driver/SanitizerArgs.cpp
+@@ -764,7 +764,7 @@ SanitizerArgs::SanitizerArgs(const ToolChain &TC,
+   ImplicitCfiRuntime = TC.getTriple().isAndroid();
+ 
+   if (AllAddedKinds & SanitizerKind::Address) {
+-    NeedPIE |= TC.getTriple().isOSFuchsia();
++    NeedPIE |= TC.getTriple().isOSFuchsia() | TC.getTriple().isOSGenode();
+     if (Arg *A =
+             Args.getLastArg(options::OPT_fsanitize_address_field_padding)) {
+         StringRef S = A->getValue();
+diff --git a/lib/Driver/ToolChains/Arch/AArch64.cpp b/lib/Driver/ToolChains/Arch/AArch64.cpp
+index dd4545d6c..22ec56518 100644
+--- a/lib/Driver/ToolChains/Arch/AArch64.cpp
++++ b/lib/Driver/ToolChains/Arch/AArch64.cpp
+@@ -373,7 +373,7 @@ fp16_fml_fallthrough:
+                                options::OPT_munaligned_access)) {
+     if (A->getOption().matches(options::OPT_mno_unaligned_access))
+       Features.push_back("+strict-align");
+-  } else if (Triple.isOSOpenBSD())
++  } else if (Triple.isOSOpenBSD() || Triple.isOSGenode())
+     Features.push_back("+strict-align");
+ 
+   if (Args.hasArg(options::OPT_ffixed_x1))
+diff --git a/lib/Driver/ToolChains/Arch/ARM.cpp b/lib/Driver/ToolChains/Arch/ARM.cpp
+index afe896b4a..f93dd30be 100644
+--- a/lib/Driver/ToolChains/Arch/ARM.cpp
++++ b/lib/Driver/ToolChains/Arch/ARM.cpp
+@@ -587,7 +587,7 @@ fp16_fml_fallthrough:
+       if (VersionNum < 6 ||
+           Triple.getSubArch() == llvm::Triple::SubArchType::ARMSubArch_v6m)
+         Features.push_back("+strict-align");
+-    } else if (Triple.isOSLinux() || Triple.isOSNaCl()) {
++    } else if (Triple.isOSLinux() || Triple.isOSNaCl() || Triple.isOSGenode()) {
+       if (VersionNum < 7)
+         Features.push_back("+strict-align");
+     } else
+diff --git a/lib/Driver/ToolChains/Clang.cpp b/lib/Driver/ToolChains/Clang.cpp
+index af4bcf951..c96b192c7 100644
+--- a/lib/Driver/ToolChains/Clang.cpp
++++ b/lib/Driver/ToolChains/Clang.cpp
+@@ -538,7 +538,7 @@ static bool useFramePointerForTargetByDefault(const ArgList &Args,
+     break;
+   }
+ 
+-  if (Triple.isOSNetBSD()) {
++  if (Triple.isOSNetBSD() || Triple.isOSGenode()) {
+     return !areOptimizationsEnabled(Args);
+   }
+ 
+diff --git a/lib/Driver/ToolChains/Genode.cpp b/lib/Driver/ToolChains/Genode.cpp
+new file mode 100644
+index 000000000..5c82146a0
+--- /dev/null
++++ b/lib/Driver/ToolChains/Genode.cpp
+@@ -0,0 +1,217 @@
++//===--- Genode.h - Genode ToolChain Implementations ------------*- C++ -*-===//
++//
++// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
++// See https://llvm.org/LICENSE.txt for license information.
++// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
++//
++//===----------------------------------------------------------------------===//
++
++#include "Genode.h"
++#include "CommonArgs.h"
++#include "InputInfo.h"
++#include "clang/Driver/Compilation.h"
++#include "clang/Driver/Driver.h"
++#include "clang/Driver/Options.h"
++#include "llvm/Option/ArgList.h"
++
++using namespace clang::driver;
++using namespace clang::driver::toolchains;
++using namespace clang::driver::tools;
++using namespace clang;
++using namespace llvm::opt;
++
++void genode::Assembler::ConstructJob(Compilation &C, const JobAction &JA,
++                                     const InputInfo &Output,
++                                     const InputInfoList &Inputs,
++                                     const ArgList &Args,
++                                     const char *LinkingOutput) const {
++  Args.ClaimAllArgs(options::OPT_mcmodel_EQ);
++  Args.ClaimAllArgs(options::OPT_mtune_EQ);
++
++  gnutools::Assembler::ConstructJob(C, JA, Output, Inputs, Args, LinkingOutput);
++}
++
++void genode::Linker::ConstructJob(Compilation &C, const JobAction &JA,
++                                  const InputInfo &Output,
++                                  const InputInfoList &Inputs,
++                                  const ArgList &Args,
++                                  const char *LinkingOutput) const {
++  const toolchains::Genode &ToolChain =
++      static_cast<const toolchains::Genode &>(getToolChain());
++  const Driver &D = ToolChain.getDriver();
++  const llvm::Triple::ArchType Arch = ToolChain.getArch();
++  ArgStringList CmdArgs;
++
++  if (!D.SysRoot.empty())
++    CmdArgs.push_back(Args.MakeArgString("--sysroot=" + D.SysRoot));
++
++  // Explicitly set the linker emulation for platforms that might not
++  // be the default emulation for the linker.
++  switch (Arch) {
++  case llvm::Triple::x86:
++    CmdArgs.push_back("-melf_i386");
++    break;
++  case llvm::Triple::x86_64:
++    CmdArgs.push_back("-melf_x86_64");
++    break;
++  case llvm::Triple::riscv32:
++    CmdArgs.push_back("-melf32lriscv");
++    break;
++  case llvm::Triple::riscv64:
++    CmdArgs.push_back("-melf64lriscv");
++    break;
++  default:
++    break;
++  }
++
++  CmdArgs.push_back("--eh-frame-hdr");
++  CmdArgs.push_back("--gc-sections");
++  CmdArgs.push_back("-zmax-page-size=0x1000");
++
++  CmdArgs.push_back("-Ttext=0x01000000");
++
++  Args.AddAllArgs(CmdArgs, options::OPT_L);
++  ToolChain.AddFilePathLibArgs(Args, CmdArgs);
++  Args.AddAllArgs(CmdArgs, options::OPT_T_Group);
++  Args.AddAllArgs(CmdArgs, options::OPT_e);
++  Args.AddAllArgs(CmdArgs, options::OPT_s);
++  Args.AddAllArgs(CmdArgs, options::OPT_t);
++  Args.AddAllArgs(CmdArgs, options::OPT_Z_Flag);
++
++  if (Args.hasArg(options::OPT_static)) {
++    CmdArgs.push_back("-Bstatic");
++  } else {
++    if (Args.hasArg(options::OPT_shared)) {
++      CmdArgs.push_back(Args.MakeArgString("-shared"));
++      CmdArgs.push_back(Args.MakeArgString("-T" + D.SysRoot + "/ld/genode_rel.ld"));
++    } else {
++      CmdArgs.push_back(Args.MakeArgString("-T" + D.SysRoot + "/ld/genode_dyn.ld"));
++      CmdArgs.push_back(Args.MakeArgString("--dynamic-list=" + D.SysRoot + "/ld/genode_dyn.dl"));
++      CmdArgs.push_back("--dynamic-linker=ld.lib.so");
++    }
++    if (!Args.hasArg(options::OPT_nostdlib, options::OPT_nodefaultlibs)) {
++      CmdArgs.push_back("-l:ld.lib.so");
++    }
++  }
++
++  if (Output.isFilename()) {
++    CmdArgs.push_back("-o");
++    CmdArgs.push_back(Output.getFilename());
++  } else {
++    assert(Output.isNothing() && "Invalid output.");
++  }
++
++  AddLinkerInputs(ToolChain, Inputs, Args, CmdArgs, JA);
++
++  if (!Args.hasArg(options::OPT_nostdlib, options::OPT_nodefaultlibs, options::OPT_noposix)) {
++    AddRunTimeLibs(ToolChain, D, CmdArgs, Args);
++
++    CmdArgs.push_back("-lc");
++    if (!Args.hasArg(options::OPT_shared)) {
++      CmdArgs.push_back("-lposix");
++    }
++  }
++
++  C.addCommand(std::make_unique<Command>(JA, *this, ResponseFileSupport::None(),
++                                         Args.MakeArgString(ToolChain.GetLinkerPath()),
++                                         CmdArgs, Inputs));
++}
++
++Genode::Genode(const Driver &D, const llvm::Triple &Triple,
++               const ArgList &Args)
++    : Generic_ELF(D, Triple, Args) {
++
++  std::vector<std::string> GenodeExtraTriples;
++  switch (Triple.getArch()) {
++  case llvm::Triple::arm:
++    GenodeExtraTriples.push_back("arm-none-eabi");
++    break;
++  case llvm::Triple::aarch64:
++    GenodeExtraTriples.push_back("aarch64-none-elf");
++    break;
++  case llvm::Triple::x86:
++  case llvm::Triple::x86_64:
++    GenodeExtraTriples.push_back("x86_64-pc-elf");
++    break;
++  case llvm::Triple::riscv64:
++    GenodeExtraTriples.push_back("riscv64-unknown-elf");
++    break;
++  default:
++    break;
++  }
++
++  GCCInstallation.init(Triple, Args, GenodeExtraTriples);
++
++  const std::string MultiarchTriple = getMultiarchTriple(D, Triple, /*SysRoot*/ "");
++  if (GCCInstallation.isValid() &&
++      (Triple.getArch() == llvm::Triple::x86_64 ||
++       Triple.getArch() == llvm::Triple::x86)) {
++
++    path_list MultilibPaths;
++    Generic_GCC::AddMultilibPaths(D, /*SysRoot*/ "", "lib",
++                                  MultiarchTriple, MultilibPaths);
++
++    auto Suffix = GCCInstallation.getMultilib().gccSuffix();
++    for (auto path: MultilibPaths)
++      addPathIfExists(D, path + Suffix, getFilePaths());
++  } else {
++    Generic_GCC::AddMultilibPaths(D, /*SysRoot*/ "", "lib",
++                                  MultiarchTriple, getFilePaths());
++  }
++
++  ToolChain::path_list &PPaths = getProgramPaths();
++
++  Generic_GCC::PushPPaths(PPaths);
++
++#ifdef ENABLE_LINKER_BUILD_ID
++  ExtraOpts.push_back("--build-id");
++#endif
++}
++
++bool Genode::isPICDefault() const {
++  switch (getTriple().getArch()) {
++  case llvm::Triple::aarch64:
++  case llvm::Triple::x86_64:
++    return true;
++  default:
++    return false;
++  }
++}
++
++void
++Genode::addLibStdCxxIncludePaths(const llvm::opt::ArgList &DriverArgs,
++                                 llvm::opt::ArgStringList &CC1Args) const {
++  // Try generic GCC detection first.
++  if (Generic_GCC::addGCCLibStdCxxIncludePaths(DriverArgs, CC1Args))
++    return;
++
++  if (!GCCInstallation.isValid())
++    return;
++
++  StringRef LibDir = GCCInstallation.getParentLibPath();
++  StringRef TripleStr = GCCInstallation.getTriple().str();
++  const Multilib &Multilib = GCCInstallation.getMultilib();
++  const GCCVersion &Version = GCCInstallation.getVersion();
++
++  const std::string IncludePath = {
++      LibDir.str() + "/../" + TripleStr.str() + "/include/c++/" + Version.Text,
++  };
++
++  addLibStdCXXIncludePaths(IncludePath, /*Suffix*/ "", TripleStr,
++                           /*GCCMultiarchTriple*/ "",
++                           /*TargetMultiarchTriple*/ "",
++                           Multilib.includeSuffix(), DriverArgs, CC1Args);
++}
++
++void Genode::addExtraOpts(llvm::opt::ArgStringList &CmdArgs) const {
++  for (const auto &Opt : ExtraOpts)
++    CmdArgs.push_back(Opt.c_str());
++}
++
++Tool *Genode::buildAssembler() const {
++  return new tools::genode::Assembler(*this);
++}
++
++Tool *Genode::buildLinker() const {
++  return new tools::genode::Linker(*this);
++}
+diff --git a/lib/Driver/ToolChains/Genode.h b/lib/Driver/ToolChains/Genode.h
+new file mode 100644
+index 000000000..f7fbbff4b
+--- /dev/null
++++ b/lib/Driver/ToolChains/Genode.h
+@@ -0,0 +1,83 @@
++//===--- Genode.h - Genode ToolChain Implementations ------------*- C++ -*-===//
++//
++// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
++// See https://llvm.org/LICENSE.txt for license information.
++// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
++//
++//===----------------------------------------------------------------------===//
++
++#ifndef LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_GENODE_H
++#define LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_GENODE_H
++
++#include "Gnu.h"
++#include "clang/Driver/Tool.h"
++#include "clang/Driver/ToolChain.h"
++
++namespace clang {
++namespace driver {
++namespace tools {
++namespace genode {
++class LLVM_LIBRARY_VISIBILITY Assembler : public gnutools::Assembler {
++public:
++  Assembler(const ToolChain &TC) : gnutools::Assembler(TC) {}
++
++  void ConstructJob(Compilation &C, const JobAction &JA,
++                    const InputInfo &Output, const InputInfoList &Inputs,
++                    const llvm::opt::ArgList &TCArgs,
++                    const char *LinkingOutput) const override;
++};
++class LLVM_LIBRARY_VISIBILITY Linker : public Tool {
++public:
++  Linker(const ToolChain &TC) : Tool("genode::Linker", "linker", TC) {}
++
++  bool hasIntegratedCPP() const override { return false; }
++  bool isLinkJob() const override { return true; }
++
++  void ConstructJob(Compilation &C, const JobAction &JA,
++                    const InputInfo &Output, const InputInfoList &Inputs,
++                    const llvm::opt::ArgList &TCArgs,
++                    const char *LinkingOutput) const override;
++};
++} // end namespace genode
++} // end namespace tools
++
++namespace toolchains {
++
++class LLVM_LIBRARY_VISIBILITY Genode : public Generic_ELF {
++public:
++  Genode(const Driver &D, const llvm::Triple &Triple,
++         const llvm::opt::ArgList &Args);
++
++  bool IsMathErrnoDefault() const override { return false; }
++  bool HasNativeLLVMSupport() const override { return false; }
++  bool isPICDefault() const override;
++  bool isPIEDefault() const override { return false; }
++  bool isPICDefaultForced() const override { return false; }
++  bool IsIntegratedAssemblerDefault() const override { return false; }
++
++  void
++  addLibStdCxxIncludePaths(const llvm::opt::ArgList &DriverArgs,
++                           llvm::opt::ArgStringList &CC1Args) const final;
++
++  bool IsUnwindTablesDefault(const llvm::opt::ArgList &Args) const override {
++    return true;
++  }
++
++  void addExtraOpts(llvm::opt::ArgStringList &CmdArgs) const override;
++
++  const char *getDefaultLinker() const override {
++    return "ld";
++  }
++
++  std::vector<std::string> ExtraOpts;
++
++protected:
++  Tool *buildAssembler() const override;
++  Tool *buildLinker() const override;
++};
++
++} // end namespace toolchains
++} // end namespace driver
++} // end namespace clang
++
++#endif // LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_GENODE_H
+diff --git a/lib/Frontend/InitHeaderSearch.cpp b/lib/Frontend/InitHeaderSearch.cpp
+index bc31445d6..364942eff 100644
+--- a/lib/Frontend/InitHeaderSearch.cpp
++++ b/lib/Frontend/InitHeaderSearch.cpp
+@@ -229,6 +229,7 @@ void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
+     case llvm::Triple::PS4:
+     case llvm::Triple::ELFIAMCU:
+     case llvm::Triple::Fuchsia:
++    case llvm::Triple::Genode:
+       break;
+     case llvm::Triple::Win32:
+       if (triple.getEnvironment() != llvm::Triple::Cygnus)
+@@ -338,6 +339,7 @@ void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
+   case llvm::Triple::NaCl:
+   case llvm::Triple::ELFIAMCU:
+   case llvm::Triple::Fuchsia:
++  case llvm::Triple::Genode:
+     break;
+   case llvm::Triple::PS4: {
+     // <isysroot> gets prepended later in AddPath().
+diff --git a/test/Driver/genode.c b/test/Driver/genode.c
+new file mode 100644
+index 000000000..e69de29bb
+diff --git a/test/Driver/genode.cpp b/test/Driver/genode.cpp
+new file mode 100644
+index 000000000..e69de29bb
