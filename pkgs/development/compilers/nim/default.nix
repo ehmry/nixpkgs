@@ -194,28 +194,16 @@ let
     inherit (nim') version;
     preferLocalBuild = true;
 
-    nativeBuildInputs = [ makeWrapper ];
+    nativeBuildInputs = [ gdb makeWrapper ];
 
     unpackPhase = ''
       runHook preUnpack
-      tar xf ${nim'.src} nim-$version/config/nim.cfg
+      tar xf ${nim'.src} nim-$version/config
       cd nim-$version
       runHook postUnpack
     '';
 
     dontConfigure = true;
-
-    wrapperArgs = [
-      "--prefix PATH : ${lib.makeBinPath [ stdenv.cc gdb ]}:${
-        placeholder "out"
-      }/bin"
-      "--prefix LD_LIBRARY_PATH : ${
-        lib.makeLibraryPath [ stdenv.cc.libc openssl ]
-      }"
-      "--set NIM_CONFIG_PATH ${placeholder "out"}/etc/nim"
-      ''--set NIX_HARDENING_ENABLE "''${NIX_HARDENING_ENABLE/fortify}"''
-      # Fortify hardening appends -O2 to gcc flags which is unwanted for unoptimized nim builds.
-    ];
 
     buildPhase = with stdenv;
       let
@@ -233,25 +221,38 @@ let
         os = ${nimTarget.os}
         cpu = ${nimTarget.cpu}
         cc = ${ccType}
+        ${ccType}.exe = "$CC"
+        ${ccType}.linkerexe = "$CC"
+        ${ccType}.cpp.exe = "$CXX"
+        ${ccType}.cpp.linkerexe = "$CXX"
         EOF
 
-        mkdir -p $out/bin $out/etc/nim
-        export cc=$CC
-        export cxx=$CXX
-        substituteAll config/nim.cfg $out/etc/nim/nim.cfg \
-          --replace "cc = gcc" ""
+        cat >> config/config.nims << EOF
+
+        switch("passl", "$NIX_LDFLAGS")
+        EOF
+
+        install -Dt $out/etc/nim config/*
+
+        makeNimWrapper() {
+          makeWrapper $1 $2 \
+            --prefix PATH : $out/bin \
+            --suffix PATH : $PATH \
+            --prefix LD_LIBRARY_PATH : ${
+              lib.makeLibraryPath [ stdenv.cc.libc openssl ]
+            } \
+            --set NIM_CONFIG_PATH $out/etc/nim \
+            --set NIX_HARDENING_ENABLE "''${NIX_HARDENING_ENABLE/fortify}"
+          # Fortify hardening appends -O2 to gcc flags which is unwanted for unoptimized nim builds.
+        }
 
         for binpath in ${nim'}/bin/nim?*; do
           local binname=`basename $binpath`
-          makeWrapper \
-            $binpath $out/bin/${targetPlatform.config}-$binname \
-            $wrapperArgs
+          makeNimWrapper $binpath $out/bin/${targetPlatform.config}-$binname
           ln -s $out/bin/${targetPlatform.config}-$binname $out/bin/$binname
         done
 
-        makeWrapper \
-          ${nim'}/nim/bin/nim $out/bin/${targetPlatform.config}-nim \
-          $wrapperArgs
+        makeNimWrapper ${nim'}/nim/bin/nim $out/bin/${targetPlatform.config}-nim
         ln -s $out/bin/${targetPlatform.config}-nim $out/bin/nim
 
         makeWrapper \
