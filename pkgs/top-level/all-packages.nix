@@ -4359,6 +4359,8 @@ in
 
   gh = callPackage ../applications/version-management/git-and-tools/gh { };
 
+  ghfs = callPackage ../applications/version-management/git-and-tools/ghfs { };
+
   ghorg = callPackage ../applications/version-management/git-and-tools/ghorg { };
 
   ghq = callPackage ../applications/version-management/git-and-tools/ghq { };
