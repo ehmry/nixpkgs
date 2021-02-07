@@ -35,6 +35,8 @@ in stdenv.mkDerivation (rec {
   src = fetch pname "0a5mb65xa5bal8q6cb37xgkqis2bip87fsafgq3wbsva9cjprn6c";
   polly_src = fetch "polly" "1smrqm9s0r2g9h0v0nil6y9wn2ih4l5bddk4dhgn538ngc7cxpq8";
 
+  patches = [ ./llvm-genode.patch ];
+
   unpackPhase = ''
     unpackFile $src
     mv llvm-${release_version}* llvm
