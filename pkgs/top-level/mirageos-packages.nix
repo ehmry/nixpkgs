@@ -21,6 +21,7 @@ in
 with mirageOcamlPackages;
 
 {
+    inherit buildMirageUnikernel;
     inherit (callPackage ../os-specific/mirageos/roburio-unikernels { })
       stub-resolver
       ;
