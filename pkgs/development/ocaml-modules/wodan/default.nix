@@ -3,15 +3,15 @@
 
 buildDunePackage rec {
   pname = "wodan";
-  version = "unstable-2020-11-20";
+  version = "unstable-2020-10-21";
 
   useDune2 = true;
 
   src = fetchFromGitHub {
     owner = "mirage";
     repo = pname;
-    rev = "cc08fe25888051c207f1009bcd2d39f8c514484f";
-    sha256 = "0186vlhnl8wcz2hmpn327n9a0bibnypmjy3w4nxq3yyglh6vj1im";
+    rev = "4e9e7bf4209cc33e5415ae137c9156683878eada";
+    sha256 = "sha256-pFoXmK6Aabc1lRzJQEMjuGnZb4bsDTXra2ToA6maUYg=";
     fetchSubmodules = true;
   };
 
