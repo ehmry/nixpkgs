@@ -140,6 +140,21 @@ let
     };
   };
 
+  AlgorithmCron = buildPerlPackage {
+    pname = "Algorithm-Cron";
+    version = "0.10";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/P/PE/PEVANS/Algorithm-Cron-0.10.tar.gz";
+      sha256 = "adbc89ffbb758259e8ed18a9b99308ec853cac2f828a7c6530ce636d1056de3b";
+    };
+    buildInputs = [ TestFatal ];
+    propagatedBuildInputs = [ Timetimegm ];
+    meta = {
+      description = "Abstract implementation of the F<cron(8)> scheduling";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
   AlgorithmDiff = buildPerlPackage {
     pname = "Algorithm-Diff";
     version = "1.1903";
@@ -373,6 +388,21 @@ let
     };
     buildInputs = [ CanaryStability ];
     meta = {
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
+  AnyEventDNSEtcHosts = buildPerlPackage {
+    pname = "AnyEvent-DNS-EtcHosts";
+    version = "0.0103";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/D/DE/DEXTER/AnyEvent-DNS-EtcHosts-0.0103.tar.gz";
+      sha256 = "430a8572d811de03c2733249866cebc2045e9843f1b705ff47bb0c6d1080af5d";
+    };
+    buildInputs = [ TestDeep ];
+    propagatedBuildInputs = [ AnyEvent ];
+    meta = {
+      description = "Use /etc/hosts before DNS";
       license = with lib.licenses; [ artistic1 gpl1Plus ];
     };
   };
@@ -1161,6 +1191,16 @@ let
        license = with lib.licenses; [ artistic1 gpl1Plus ];
      };
   };
+
+  AuthenTacacsPlus = buildPerlPackage {
+    pname = "Authen-TacacsPlus";
+    version = "0.28";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/M/MI/MIKEM/Authen-TacacsPlus-0.28.tar.gz";
+      sha256 = "c915ce2b85d177ec33733ad4a9a8ab23e3a390427426e729d2e2b0c1c8e422fc";
+    };
+  };
+
 
   autobox = buildPerlPackage {
     pname = "autobox";
@@ -4288,6 +4328,20 @@ let
     };
   };
 
+  CryptSaltedHash = buildPerlPackage {
+    pname = "Crypt-SaltedHash";
+    version = "0.09";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/G/GS/GSHANK/Crypt-SaltedHash-0.09.tar.gz";
+      sha256 = "1d1d2eb2bc2ee9bc4b9fde6909cb8b1abfeced7e75b16e8a23312ff354cc8438";
+    };
+    buildInputs = [ TestFatal ];
+    meta = {
+      description = "Perl interface to functions that assist in working with salted hashes.";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
   CryptUnixCryptXS = buildPerlPackage {
     pname = "Crypt-UnixCrypt_XS";
     version = "0.11";
@@ -4662,6 +4716,128 @@ let
       license = with lib.licenses; [ artistic1 gpl1Plus ];
     };
     buildInputs = [ TestRequires ];
+  };
+
+  DaemonControl = buildPerlPackage {
+    pname = "Daemon-Control";
+    version = "0.001010";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/S/SY/SYMKAT/Daemon-Control-0.001010.tar.gz";
+      sha256 = "8440389a83166f5b993f806d9f60460677ee2af1c613600968989333d70d4707";
+    };
+    meta = {
+      description = "Create init scripts in Perl";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
+  Dancer = buildPerlPackage {
+    pname = "Dancer";
+    version = "1.3513";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/B/BI/BIGPRESH/Dancer-1.3513.tar.gz";
+      sha256 = "b3a666d9999791f809a0b22ab93e3b90a084a268e77412d6ad0549694b15132e";
+    };
+    buildInputs = [ DataDump DevelHide HTTPCookieJar JSON Plack TestNoWarnings ];
+    propagatedBuildInputs = [ HTTPBody HTTPDate HTTPMessage HTTPServerSimplePSGI HashMergeSimple MIMETypes ModuleRuntime TryTiny URI ];
+    meta = {
+      homepage = "https://github.com/PerlDancer/Dancer";
+      description = "Lightweight yet powerful web application framework";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
+  DancerPluginAuthExtensible = buildPerlPackage {
+    pname = "Dancer-Plugin-Auth-Extensible";
+    version = "1.00";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/B/BI/BIGPRESH/Dancer-Plugin-Auth-Extensible-1.00.tar.gz";
+      sha256 = "801a364fe7a69ea90a8d78e9f09ad7d0d321a0970aec95ecf2011e06446e51fe";
+    };
+    propagatedBuildInputs = [ CryptSaltedHash Dancer YAML ];
+    meta = {
+      homepage = "https://github.com/bigpresh/Dancer-Plugin-Auth-Extensible/";
+      description = "Extensible authentication framework for Dancer apps";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
+  DancerPluginDBIC = buildPerlPackage {
+    pname = "Dancer-Plugin-DBIC";
+    version = "0.2104";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/I/IR/IRONCAMEL/Dancer-Plugin-DBIC-0.2104.tar.gz";
+      sha256 = "cb9a2470e234ef8b9bcd7dfbb721ab8934d533dca784adf922b327a306f5d918";
+    };
+    buildInputs = [ DBDSQLite DBI DBIxClass TestException TestRequires ];
+    propagatedBuildInputs = [ DBICxSugar Dancer ];
+    meta = {
+      description = "DBIx::Class interface for Dancer applications";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
+  DancerPluginPassphrase = buildPerlPackage {
+    pname = "Dancer-Plugin-Passphrase";
+    version = "2.0.1";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/J/JA/JAITKEN/Dancer-Plugin-Passphrase-2.0.1.tar.gz";
+      sha256 = "33b49fd46cf6732ccf2b0cf2761c6e72911e9e029f93b914a1f8b7f7ea4f7ba5";
+    };
+    propagatedBuildInputs = [ Dancer DataEntropy DigestBcrypt ];
+    meta = {
+      homepage = "https://github.com/LoonyPandora/Dancer-Plugin-Passphrase";
+      description = "Passphrases and Passwords as objects for Dancer";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
+  DancerPluginREST = buildPerlModule {
+    pname = "Dancer-Plugin-REST";
+    version = "0.11";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/Y/YA/YANICK/Dancer-Plugin-REST-0.11.tar.gz";
+      sha256 = "81b8916632ef464c913829fe661eb1a6cecba0f2f9f7e1935db128f2ab4518a8";
+    };
+    buildInputs = [ HTTPMessage ];
+    propagatedBuildInputs = [ Dancer ];
+    meta = {
+      homepage = "http://search.cpan.org/dist/Dancer-Plugin-REST/";
+      description = "A plugin for writing RESTful apps with Dancer";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
+  DancerPluginSwagger = buildPerlPackage {
+    pname = "Dancer-Plugin-Swagger";
+    version = "0.3.0";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/Y/YA/YANICK/Dancer-Plugin-Swagger-0.3.0.tar.gz";
+      sha256 = "4054201064b55bfb0d847542617a4683bb1b934dcfe60594814e65c166345138";
+    };
+    buildInputs = [ FileShareDirInstall TestDeep TestWWWMechanizePSGI ];
+    propagatedBuildInputs = [ ClassLoad Clone Dancer DancerPluginREST FileShareDirTarball HashMerge JSON ListAllUtils ModuleVersion Moo MooXSingleton MooseXMungeHas PathTiny PerlXMaybe ];
+    meta = {
+      homepage = "https://github.com/yanick/Dancer-Plugin-Swagger";
+      description = "Create Swagger documentation of the app REST interface";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
+  DancerSessionCookie = buildPerlPackage {
+    pname = "Dancer-Session-Cookie";
+    version = "0.30";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/Y/YA/YANICK/Dancer-Session-Cookie-0.30.tar.gz";
+      sha256 = "526790cf91b8d2501a58292284bf511a2f00b05f51aa0aff713ff5166b4d6412";
+    };
+    buildInputs = [ HTTPCookies HTTPDate HTTPMessage Plack TestException TestNoWarnings TestRequires ];
+    propagatedBuildInputs = [ CryptCBC CryptRijndael Dancer PerlXMaybe SessionStorageSecure StringCRC32 TimeDurationParse ];
+    meta = {
+      homepage = "https://github.com/perldancer/Dancer-Session-Cookie";
+      description = "Encrypted cookie-based session backend for Dancer";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
   };
 
   DataClone = buildPerlPackage {
@@ -5157,6 +5333,20 @@ let
     };
     buildInputs = [ TestNeeds ];
     propagatedBuildInputs = [ Moose TieToObject namespaceclean ];
+  };
+
+  DataVisitorTiny = buildPerlPackage {
+    pname = "Data-Visitor-Tiny";
+    version = "0.001";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/D/DA/DAGOLDEN/Data-Visitor-Tiny-0.001.tar.gz";
+      sha256 = "13bbcc9e9848095e3ab456b01f67c044a275d363555544c21041fcf56e0dcc40";
+    };
+    meta = {
+      homepage = "https://github.com/dagolden/Data-Visitor-Tiny";
+      description = "Recursively walk data structures";
+      license = lib.licenses.asl20;
+    };
   };
 
   DateCalc = buildPerlPackage {
@@ -6115,6 +6305,21 @@ let
     };
   };
 
+  DBICxSugar = buildPerlPackage {
+    pname = "DBICx-Sugar";
+    version = "0.0200";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/I/IR/IRONCAMEL/DBICx-Sugar-0.0200.tar.gz";
+      sha256 = "3261e13248128f1ad023a6370f903dd4e09814d16abd441f807f94c0f2b385f9";
+    };
+    buildInputs = [ DBI TestModern TestRequires ];
+    propagatedBuildInputs = [ DBIxClass SQLTranslator YAML ];
+    meta = {
+      description = "Just some syntax sugar for DBIx::Class";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
   DataBinary = buildPerlPackage {
     pname = "Data-Binary";
     version = "0.01";
@@ -6311,6 +6516,22 @@ let
     };
     meta = {
       description = "Dump symbol names or the symbol table";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
+  DigestBcrypt = buildPerlPackage {
+    pname = "Digest-Bcrypt";
+    version = "1.209";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/C/CA/CAPOEIRAB/Digest-Bcrypt-1.209.tar.gz";
+      sha256 = "78450a29538fea87bb831483b7a6897892865b0f7e6c0a506b7f8496f229b30c";
+    };
+    buildInputs = [ TryTiny ];
+    propagatedBuildInputs = [ CryptEksblowfish ];
+    meta = {
+      homepage = "https://github.com/genio/digest-bcrypt";
+      description = "Perl interface to the bcrypt digest algorithm";
       license = with lib.licenses; [ artistic1 gpl1Plus ];
     };
   };
@@ -8263,6 +8484,22 @@ let
     };
     meta = {
       description = "Install shared files";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
+  FileShareDirTarball = buildPerlModule {
+    pname = "File-ShareDir-Tarball";
+    version = "0.2.2";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/Y/YA/YANICK/File-ShareDir-Tarball-0.2.2.tar.gz";
+      sha256 = "49e785f266e3e2ef001236fb2371eab598ad949fad12ca641172f7825fd02395";
+    };
+    buildInputs = [ TestFileShareDir ];
+    propagatedBuildInputs = [ FileShareDir Filechdir ];
+    meta = {
+      homepage = "http://search.cpan.org/dist/File-ShareDir-Tarball/";
+      description = "Deal transparently with shared files distributed as tarballs";
       license = with lib.licenses; [ artistic1 gpl1Plus ];
     };
   };
@@ -13622,6 +13859,21 @@ let
     };
   };
 
+  ModuleVersion = buildPerlPackage {
+    pname = "Module-Version";
+    version = "0.201";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/X/XS/XSAWYERX/Module-Version-0.201.tar.gz";
+      sha256 = "87c3b3dadd30b80003d405065e2ed94adbc3fcbfe77dc6b7f97e33bf8404aa5a";
+    };
+    buildInputs = [ TestOutput ];
+    propagatedBuildInputs = [ locallib ];
+    meta = {
+      description = "Get module versions";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
   ModuleVersions = buildPerlPackage {
     pname = "Module-Versions";
     version = "0.02";
@@ -14584,6 +14836,21 @@ let
     };
   };
 
+  MooseXMungeHas = buildPerlPackage {
+    pname = "MooseX-MungeHas";
+    version = "0.011";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/T/TO/TOBYINK/MooseX-MungeHas-0.011.tar.gz";
+      sha256 = "863bc8e9049f2c06f0af15fa4b413f287be2c0821d1981661803ceae36d06495";
+    };
+    buildInputs = [ Moose TestFatal TestRequires ];
+    meta = {
+      homepage = "https://metacpan.org/release/MooseX-MungeHas";
+      description = "Munge your "has" (works with Moo, Moose and Mouse)";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
   MooseXNonMoose = buildPerlPackage {
     pname = "MooseX-NonMoose";
     version = "0.26";
@@ -15139,6 +15406,21 @@ let
     };
   };
 
+  NetAddrMAC = buildPerlPackage {
+    pname = "NetAddr-MAC";
+    version = "0.97";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/D/DJ/DJZORT/NetAddr-MAC-0.97.tar.gz";
+      sha256 = "658bac08c46a67c45d0edd5fd288be93c10ace4f50390ea6951981548e9ddefc";
+    };
+    buildInputs = [ TestTrap ];
+    meta = {
+      homepage = "https://github.com/djzort/NetAddr-MAC";
+      description = "MAC hardware address functions and object (EUI48 and EUI64)";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
   NetAmazonAWSSign = buildPerlPackage {
     pname = "Net-Amazon-AWSSign";
     version = "0.12";
@@ -15382,6 +15664,22 @@ let
        license = with lib.licenses; [ artistic1 gpl1Plus ];
      };
     buildInputs = [ TestException ];
+  };
+
+  Netdisco = buildPerlModule {
+    pname = "App-Netdisco";
+    version = "2.047005";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/O/OL/OLIVER/App-Netdisco-2.047005.tar.gz";
+      sha256 = "9d9431bebe915117f3fa5daed61ba62477b52ec03bbb7fc923bfc7ad3e66e9db";
+    };
+    buildInputs = [ EnvPath ExtUtilsConfig ExtUtilsHelpers ExtUtilsInstallPaths TestCompile TestFileShareDir ];
+    propagatedBuildInputs = [ AlgorithmCron AnyEvent AnyEventDNSEtcHosts Appcpanminus AuthenRadius AuthenTacacsPlus CGIExpand CommandRunner DBDPg DBIxClass DBIxClassHelpers DaemonControl Dancer DancerPluginAuthExtensible DancerPluginDBIC DancerPluginPassphrase DancerPluginSwagger DancerSessionCookie DataPrinter DataVisitorTiny Expect FileShareDir FileSlurper Guard HTMLParser IOSocketInet6 IOSocketSSL JSON JSONXS ListMoreUtils MCE Moo NetAddrIP NetAddrMAC NetDNS NetOpenSSH PackageDeprecationManager PathClass Plack PlackMiddlewareDebug PlackMiddlewareExpires PlackMiddlewareReverseProxy RegexpCommon RoleTiny NetSNMPInfo SQLAbstract SQLTranslator ScopeGuard Sereal Socket6 Starman SysSigAction TemplateAutoFilter TemplatePluginCSV TemplatePluginNumberFormat TemplateToolkit TryTiny Twiggy URI URIBased URLEncode URLEncodeXS YAML YAMLLibYAML aliased autovivification namespaceclean perlldap ];
+    meta = {
+      homepage = "http://netdisco.org/";
+      description = "An open source web-based network management tool";
+      license = lib.licenses.bsd3;
+    };
   };
 
   NetDomainTLD = buildPerlPackage {
@@ -15807,6 +16105,17 @@ let
     doCheck = false; # The test suite fails, see https://rt.cpan.org/Public/Bug/Display.html?id=85799
   };
 
+  NetSNMPdefault_store = buildPerlPackage {
+    pname = "NetSNMP-default_store";
+    version = "5.0404";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/H/HA/HARDAKER/NetSNMP-default_store-5.0404.tar.gz";
+      sha256 = "11d882f0ac278fe23c9d199d514a9f1bb8edfc3027964a024966185daeb50886";
+    };
+    buildInputs = [ pkgs.net-snmp ];
+    propagatedBuildInputs = [ NetSNMP ];
+  };
+
   NetSNPP = buildPerlPackage rec {
     pname = "Net-SNPP";
     version = "1.17";
@@ -16006,6 +16315,21 @@ let
        description = "Number::Misc - handy utilities for numbers";
        license = with lib.licenses; [ artistic1 gpl1Plus ];
      };
+  };
+
+  NumberTolerant = buildPerlPackage {
+    pname = "Number-Tolerant";
+    version = "1.708";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/R/RJ/RJBS/Number-Tolerant-1.708.tar.gz";
+      sha256 = "c0463b04eb49173dec94821e1066ac1517ba1bab71c7c32d3a3d93f736618d43";
+    };
+    propagatedBuildInputs = [ SubExporter ];
+    meta = {
+      homepage = "https://github.com/rjbs/Number-Tolerant";
+      description = "Tolerance ranges for inexact numbers";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
   };
 
   NumberWithError = buildPerlPackage {
@@ -17005,6 +17329,20 @@ let
     '';
   };
 
+  PerlXMaybe = buildPerlPackage {
+    pname = "PerlX-Maybe";
+    version = "1.201";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/T/TO/TOBYINK/PerlX-Maybe-1.201.tar.gz";
+      sha256 = "e5ba9241d3131f56eb3d8b89b8da8c41edc14d780d4f85c65499a8e9d4f5cc5e";
+    };
+    meta = {
+      homepage = "https://metacpan.org/release/PerlX-Maybe";
+      description = "Return a pair only if they are both defined";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
   PHPSerialization = buildPerlPackage {
     pname = "PHP-Serialization";
     version = "0.34";
@@ -17123,6 +17461,21 @@ let
        description = "Compress response body with Gzip or Deflate";
        license = with lib.licenses; [ artistic1 gpl1Plus ];
      };
+  };
+
+  PlackMiddlewareExpires = buildPerlModule {
+    pname = "Plack-Middleware-Expires";
+    version = "0.06";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/K/KA/KAZEBURO/Plack-Middleware-Expires-0.06.tar.gz";
+      sha256 = "c7489e717c2ffd52f85ea9fb4e603e76e150ab7b9b2b9046fd433461626b2113";
+    };
+    propagatedBuildInputs = [ HTTPDate HTTPMessage Plack TryTiny ];
+    meta = {
+      homepage = "https://github.com/kazeburo/Plack-Middleware-Expires";
+      description = "Mod_expires for plack";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
   };
 
   PlackMiddlewareFixMissingBodyInRedirect = buildPerlPackage {
@@ -18446,6 +18799,23 @@ let
     };
   };
 
+  SessionStorageSecure = buildPerlPackage {
+    pname = "Session-Storage-Secure";
+    version = "1.000";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/D/DA/DAGOLDEN/Session-Storage-Secure-1.000.tar.gz";
+      sha256 = "58b2f04eba56a9924494bb3eddd426affa75c3dded1c563f8296fcc13f8e666b";
+    };
+    buildInputs = [ NumberTolerant TestDeep TestFatal ];
+    propagatedBuildInputs = [ CryptCBC CryptRijndael CryptURandom MathRandomISAAC Moo MooXTypesMooseLike SerealDecoder SerealEncoder StringCompareConstantTime namespaceclean ];
+    doCheck = false;
+    meta = {
+      homepage = "https://github.com/dagolden/Session-Storage-Secure";
+      description = "Encrypted, expiring, compressed, serialized session data with integrity";
+      license = lib.licenses.asl20;
+    };
+  };
+
   SessionToken = buildPerlPackage rec {
     pname = "Session-Token";
     version = "1.503";
@@ -18546,6 +18916,23 @@ let
     meta = {
       description = "Signal masks made easy";
       license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
+  NetSNMPInfo = buildPerlModule {
+    pname = "SNMP-Info";
+    version = "3.71";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/O/OL/OLIVER/SNMP-Info-3.71.tar.gz";
+      sha256 = "0774b265f7be0564a836233ef2f2d694bc677ad9cc68e21b83c14e2ab5e7183e";
+    };
+    buildInputs = [ ClassInspector FileSlurper HookLexWrap ModuleFind NetSNMPdefault_store PathClass TestClassMost TestDistribution TestException TestMockObject ];
+    propagatedBuildInputs = [ NetAddrIP NetSNMP ];
+    doCheck = false;
+    meta = {
+      homepage = "http://netdisco.org/";
+      description = "OO Interface to Network devices and MIBs through SNMP";
+      license = lib.licenses.bsd3;
     };
   };
 
@@ -19783,6 +20170,22 @@ let
     };
   };
 
+  TemplateAutoFilter = buildPerlPackage {
+    pname = "Template-AutoFilter";
+    version = "0.143050";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/M/MI/MITHALDU/Template-AutoFilter-0.143050.tar.gz";
+      sha256 = "22d2fee56276bc30d50d413ef4d19e4e053ba37f9505dfa585bd5fea98028b76";
+    };
+    buildInputs = [ TestInDistDir TestMost ];
+    propagatedBuildInputs = [ ListMoreUtils TemplateToolkit ];
+    doCheck = false;
+    meta = {
+      homepage = "https://github.com/wchristian/Template-AutoFilter";
+      description = "Template::Toolkit with automatic filtering";
+    };
+  };
+
   TemplatePluginAutoformat = buildPerlPackage {
     pname = "Template-Plugin-Autoformat";
     version = "2.77";
@@ -19806,6 +20209,21 @@ let
       sha256 = "1hq7jy6zg1iaslsyi05afz0i944y9jnv3nb4krkxjfmzwy5gw106";
     };
     propagatedBuildInputs = [ TemplateToolkit ];
+  };
+
+  TemplatePluginCSV = buildPerlPackage {
+    pname = "Template-Plugin-CSV";
+    version = "0.04";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/G/GU/GUGOD/Template-Plugin-CSV-0.04.tar.gz";
+      sha256 = "cc96af7d7ce7381d8ec12266732bd508d74eaa972192d0e09f438edea15c4887";
+    };
+    propagatedBuildInputs = [ TemplateToolkit TextCSV ];
+    doCheck = false;
+    meta = {
+      description = "Template plugin to generate CSV";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
   };
 
   TemplatePluginIOAll = buildPerlPackage {
@@ -19841,6 +20259,18 @@ let
       sha256 = "051a8b1d3bc601d58fc51e246067d36450cfe970278a0456e8ab61940f13cd86";
     };
     propagatedBuildInputs = [ JSON TemplateToolkit ];
+  };
+
+  TemplatePluginNumberFormat = buildPerlPackage {
+    pname = "Template-Plugin-Number-Format";
+    version = "1.06";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/D/DA/DARREN/Template-Plugin-Number-Format-1.06.tar.gz";
+      sha256 = "0865836a1bcbc34d4a0ee34b5ccc14d7b511f1fd300bf390f002dac349539843";
+    };
+    propagatedBuildInputs = [ NumberFormat TemplateToolkit ];
+    meta = {
+    };
   };
 
   TemplateTimer = buildPerlPackage {
@@ -20264,6 +20694,20 @@ let
      };
   };
 
+  TestAPI = buildPerlPackage {
+    pname = "Test-API";
+    version = "0.010";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/D/DA/DAGOLDEN/Test-API-0.010.tar.gz";
+      sha256 = "7e6034f0eb29314d31d3354828106ace2745f2160cd3c1443a29b68f53ca2313";
+    };
+    meta = {
+      homepage = "https://github.com/dagolden/Test-API";
+      description = "Test a list of subroutines provided by a module";
+      license = lib.licenses.asl20;
+    };
+  };
+
   TestAssert = buildPerlModule {
     pname = "Test-Assert";
     version = "0.0504";
@@ -20491,6 +20935,20 @@ let
     };
     meta = {
       description = "Test directory attributes";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
+  TestDistribution = buildPerlModule {
+    pname = "Test-Distribution";
+    version = "2.00";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/S/SR/SRSHAH/Test-Distribution-2.00.tar.gz";
+      sha256 = "50ecd07fb6cab7b2b2a73b5526ee43b90e77734c9bcec95ce8822b9c0a912b68";
+    };
+    propagatedBuildInputs = [ FileFindRule PodCoverage TestPod TestPodCoverage ];
+    meta = {
+      description = "Perform tests on all modules of a distribution";
       license = with lib.licenses; [ artistic1 gpl1Plus ];
     };
   };
@@ -20967,6 +21425,21 @@ let
        license = with lib.licenses; [ artistic1 gpl1Plus ];
        homepage = "https://github.com/tarao/perl5-Test-MockTime-HiRes";
      };
+  };
+
+  TestModern = buildPerlPackage {
+    pname = "Test-Modern";
+    version = "0.013";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/T/TO/TOBYINK/Test-Modern-0.013.tar.gz";
+      sha256 = "63ebc04b761c5748a121006d0e2672a6836d39cfb9e0b42dda80c8161f7a1246";
+    };
+    propagatedBuildInputs = [ ExporterTiny ImportInto ModuleRuntime TestAPI TestDeep TestFatal TestWarnings TryTiny ];
+    meta = {
+      homepage = "https://metacpan.org/release/Test-Modern";
+      description = "Precision testing for modern perl";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
   };
 
   TestMojibake = buildPerlPackage {
@@ -22726,6 +23199,20 @@ let
     };
   };
 
+  Timetimegm = buildPerlPackage {
+    pname = "Time-timegm";
+    version = "0.01";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/P/PE/PEVANS/Time-timegm-0.01.tar.gz";
+      sha256 = "e721cdfda183146b895e04cee712e10ab1bc73c8bad1bbc84c04b19ef1052c98";
+    };
+    buildInputs = [ ExtUtilsCChecker ];
+    meta = {
+      description = "A UTC version of C<mktime()>";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
   Tirex = buildPerlPackage rec {
     pname = "Tirex";
     version = "0.6.1";
@@ -23027,6 +23514,20 @@ let
     };
   };
 
+  URIBased = buildPerlPackage {
+    pname = "URI-Based";
+    version = "1.03";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/N/NI/NICWOLFF/URI-Based-1.03.tar.gz";
+      sha256 = "e0d94aff0e3d8aae3e31549d95277374d9a0c50279f8b38f920ea645b0065261";
+    };
+    propagatedBuildInputs = [ URI ];
+    meta = {
+      description = "Define a base URI and then generate variations on it";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
   URIdb = buildPerlModule {
     pname = "URI-db";
     version = "0.19";
@@ -23172,6 +23673,33 @@ let
     meta = {
       homepage = "https://metacpan.org/release/URI-ws";
       description = "WebSocket support for URI package";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
+  URLEncode = buildPerlPackage {
+    pname = "URL-Encode";
+    version = "0.03";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/C/CH/CHANSEN/URL-Encode-0.03.tar.gz";
+      sha256 = "7295d7f07796b179131d9c0f230a6effa56d204de2f8dc72f2e09c61458c8ee6";
+    };
+    meta = {
+      description = "Encoding and decoding of C<application/x-www-form-urlencoded> encoding";
+      license = with lib.licenses; [ artistic1 gpl1Plus ];
+    };
+  };
+
+  URLEncodeXS = buildPerlPackage {
+    pname = "URL-Encode-XS";
+    version = "0.03";
+    src = fetchurl {
+      url = "mirror://cpan/authors/id/C/CH/CHANSEN/URL-Encode-XS-0.03.tar.gz";
+      sha256 = "d44f416bd3e58e3b3366ab420705da02c7118fc848a97ce089366ea0461fa823";
+    };
+    propagatedBuildInputs = [ URLEncode ];
+    meta = {
+      description = "XS implementation of URL::Encode";
       license = with lib.licenses; [ artistic1 gpl1Plus ];
     };
   };
