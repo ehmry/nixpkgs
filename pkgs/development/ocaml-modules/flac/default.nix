@@ -1,4 +1,4 @@
-{ lib, fetchFromGitHub, buildDunePackage, dune-configurator, flac, pkg-config  }:
+{ lib, fetchFromGitHub, buildDunePackage, dune-configurator, flac, pkg-config, ogg  }:
 
 buildDunePackage rec {
   pname = "flac";
@@ -12,9 +12,9 @@ buildDunePackage rec {
 
   useDune2 = true;
 
-  buildInputs = [ dune-configurator ];
-  nativeBuildInputs = [ pkg-config ];
-  propagatedBuildInputs = [ flac ];
+  nativeBuildInputs = [ dune-configurator pkg-config ];
+  buildInputs = [ flac ];
+  propagatedBuildInputs = [ ogg ];
 
   meta = {
     description = "Bindings to libflac";

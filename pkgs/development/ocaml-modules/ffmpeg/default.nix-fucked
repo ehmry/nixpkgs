@@ -1,0 +1,66 @@
+{ lib, fetchurl, fetchFromGitHub, buildDunePackage, dune-configurator, pkg-config, ffmpeg
+}:
+
+let
+  ffmpeg' = ffmpeg;
+  version = "0.4.3";
+  /*
+  src = fetchFromGitHub {
+    owner = "savonet";
+    repo = "ocaml-ffmpeg";
+    rev = "v${version}";
+    hash = "sha256-OaRjyYZh0cCD8XDe6qIEfu1RodHUaFgNrIY7B1YPJ2g=";
+  };
+  */
+  src = fetchurl {
+    url = "https://github.com/savonet/ocaml-ffmpeg/releases/download/v0.4.3/ocaml-ffmpeg-0.4.3.tar.gz";
+    hash = "sha256-j8Y9yalBv6Rau1/jl2PoLpkkogW/AVdjmF/um78YA6I=";
+  };
+
+  meta = {
+    description = "Bindings for the ffmpeg libraries";
+    inherit (src.meta) homepage;
+    license = lib.licenses.gpl2Only;
+    maintainers = [ lib.maintainers.ehmry ];
+  };
+
+  build = name: inputs:
+    buildDunePackage rec {
+      pname = "ffmpeg-${name}";
+      inherit version src meta;
+
+      useDune2 = true;
+
+      nativeBuildInputs = [ dune-configurator pkg-config ];
+      buildInputs = [ ffmpeg' ];
+      propagatedBuildInputs = inputs;
+    };
+
+  ffmpegLibs = rec {
+    ffmpeg-av = build "av" [ ffmpeg-avcodec ];
+    ffmpeg-avutil = build "avutil" [ ];
+    ffmpeg-avcodec = build "avcodec" [ ffmpeg-avutil ];
+    ffmpeg-avfilter = build "avfilter" [ ffmpeg-avutil ];
+    ffmpeg-avdevice = build "avdevice" [ ffmpeg-av ];
+    ffmpeg-swscale = build "swscale" [ ffmpeg-avutil ];
+    ffmpeg-swresample = build "swresample" [ ffmpeg-avcodec ];
+  };
+
+#in ffmpegLibs // {
+
+in {
+
+  ffmpeg = buildDunePackage rec {
+    pname = "ffmpeg";
+    inherit version src meta;
+
+    useDune2 = true;
+
+    nativeBuildInputs = [ dune-configurator pkg-config ];
+    buildInputs = [ ffmpeg' ];
+    # propagatedBuildInputs = builtins.attrValues ffmpegLibs;
+
+
+  };
+
+}

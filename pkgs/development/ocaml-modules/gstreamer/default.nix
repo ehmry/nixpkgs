@@ -1,5 +1,5 @@
-{ lib, fetchFromGitHub, buildDunePackage, dune-configurator, glib, gstreamer
-, gst-plugins-base }:
+{ lib, fetchFromGitHub, buildDunePackage, dune-configurator, pkg-config, glib
+, gstreamer, gst-plugins-base }:
 
 buildDunePackage rec {
   pname = "gstreamer";
@@ -13,7 +13,8 @@ buildDunePackage rec {
 
   useDune2 = true;
 
-  buildInputs = [ dune-configurator glib gstreamer gst-plugins-base ];
+  nativeBuildInputs = [ dune-configurator pkg-config ];
+  buildInputs = [ glib gstreamer gst-plugins-base ];
 
   meta = {
     description =

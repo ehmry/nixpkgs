@@ -383,6 +383,9 @@ let
 
     fdkaac = callPackage ../development/ocaml-modules/fdkaac { };
 
+    ffmpeg = callPackage ../development/ocaml-modules/ffmpeg {
+      inherit (pkgs) ffmpeg; };
+
     fiat-p256 = callPackage ../development/ocaml-modules/fiat-p256 { };
 
     fieldslib_p4 = callPackage ../development/ocaml-modules/fieldslib { };
@@ -668,6 +671,8 @@ let
 
     magick = callPackage ../development/ocaml-modules/magick { };
 
+    # magic = callPackage ../development/ocaml-modules/magic { };
+
     mariadb = callPackage ../development/ocaml-modules/mariadb {
       inherit (pkgs) mariadb;
     };
@@ -905,7 +910,7 @@ let
 
     ocamlscript = callPackage ../development/tools/ocaml/ocamlscript { };
 
-    ocamlsdl= callPackage ../development/ocaml-modules/ocamlsdl { };
+    ocamlsdl = callPackage ../development/ocaml-modules/ocamlsdl { };
 
     ocaml_sqlite3 = callPackage ../development/ocaml-modules/sqlite3 { };
 
