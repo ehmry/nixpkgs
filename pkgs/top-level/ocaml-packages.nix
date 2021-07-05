@@ -34,6 +34,8 @@ let
 
     ansiterminal = callPackage ../development/ocaml-modules/ansiterminal { };
 
+    ao = callPackage ../development/ocaml-modules/ao { };
+
     apron = callPackage ../development/ocaml-modules/apron { };
 
     arp = callPackage ../development/ocaml-modules/arp { };
@@ -213,6 +215,8 @@ let
 
     crunch = callPackage ../development/tools/ocaml/crunch { };
 
+    cry = callPackage ../development/ocaml-modules/cry { };
+
     cryptokit = callPackage ../development/ocaml-modules/cryptokit { };
 
     csexp = callPackage ../development/ocaml-modules/csexp { };
@@ -284,6 +288,8 @@ let
 
     dtoa = callPackage ../development/ocaml-modules/dtoa { };
 
+    dtools = callPackage ../development/ocaml-modules/dtools { };
+
     duff = callPackage ../development/ocaml-modules/duff { };
 
     dum = callPackage ../development/ocaml-modules/dum { };
@@ -310,6 +316,8 @@ let
     dune-release = callPackage ../development/tools/ocaml/dune-release {
       inherit (pkgs) opam git mercurial coreutils gnutar bzip2;
     };
+
+    duppy = callPackage ../development/ocaml-modules/duppy { };
 
     duration =  callPackage ../development/ocaml-modules/duration { };
 
@@ -357,6 +365,8 @@ let
 
     ezxmlm = callPackage ../development/ocaml-modules/ezxmlm { };
 
+    faad = callPackage ../development/ocaml-modules/faad { };
+
     facile = callPackage ../development/ocaml-modules/facile { };
 
     faillib = callPackage ../development/ocaml-modules/faillib { };
@@ -383,6 +393,8 @@ let
 
     fix = callPackage ../development/ocaml-modules/fix { };
 
+    flac = callPackage ../development/ocaml-modules/flac { inherit (pkgs) flac; };
+
     fmt = callPackage ../development/ocaml-modules/fmt { };
 
     fontconfig = callPackage ../development/ocaml-modules/fontconfig {
@@ -390,6 +402,8 @@ let
     };
 
     fpath = callPackage ../development/ocaml-modules/fpath { };
+
+    frei0r = callPackage ../development/ocaml-modules/frei0r { inherit (pkgs) frei0r; };
 
     functoria = callPackage ../development/ocaml-modules/functoria { };
 
@@ -453,6 +467,8 @@ let
       extlib = ocaml_extlib;
     };
 
+    lame = callPackage ../development/ocaml-modules/lame { inherit (pkgs) lame; };
+
     dypgen = callPackage ../development/ocaml-modules/dypgen { };
 
     gapi_ocaml = callPackage ../development/ocaml-modules/gapi-ocaml { };
@@ -489,6 +505,10 @@ let
     graphql_parser = callPackage ../development/ocaml-modules/graphql/parser.nix { };
 
     graphql_ppx = callPackage ../development/ocaml-modules/graphql_ppx { };
+
+    gstreamer = callPackage ../development/ocaml-modules/gstreamer {
+      inherit (pkgs.gst_all_1) gstreamer gst-plugins-base;
+    };
 
     gtktop = callPackage ../development/ocaml-modules/gtktop { };
 
@@ -588,6 +608,8 @@ let
 
     lacaml = callPackage ../development/ocaml-modules/lacaml { };
 
+    ladspa = callPackage ../development/ocaml-modules/ladspa { };
+
     lambdasoup = callPackage ../development/ocaml-modules/lambdasoup { };
 
     lambdaTerm = callPackage ../development/ocaml-modules/lambda-term { };
@@ -597,6 +619,8 @@ let
     letsencrypt = callPackage ../development/ocaml-modules/letsencrypt { };
 
     linenoise = callPackage ../development/ocaml-modules/linenoise { };
+
+    liquidsoap = callPackage ../development/ocaml-modules/liquidsoap { };
 
     llvm = callPackage ../development/ocaml-modules/llvm {
       libllvm = pkgs.llvmPackages_8.libllvm;
@@ -637,6 +661,8 @@ let
     macaddr-sexp = callPackage ../development/ocaml-modules/macaddr/sexp.nix { };
 
     macaque = callPackage ../development/ocaml-modules/macaque { };
+
+    mad = callPackage ../development/ocaml-modules/mad { };
 
     magic-mime = callPackage ../development/ocaml-modules/magic-mime { };
 
@@ -776,6 +802,8 @@ let
     mlgmp =  callPackage ../development/ocaml-modules/mlgmp { };
 
     mlgmpidl =  callPackage ../development/ocaml-modules/mlgmpidl { };
+
+    mm =  callPackage ../development/ocaml-modules/mm { };
 
     mmap =  callPackage ../development/ocaml-modules/mmap { };
 
@@ -923,6 +951,8 @@ let
 
     odoc = callPackage ../development/ocaml-modules/odoc { };
 
+    ogg = callPackage ../development/ocaml-modules/ogg { };
+
     omd = callPackage ../development/ocaml-modules/omd { };
 
     opam-core = callPackage ../development/ocaml-modules/opam-core {
@@ -1011,6 +1041,9 @@ let
 
     ptime = callPackage ../development/ocaml-modules/ptime { };
 
+    pulseaudio = callPackage ../development/ocaml-modules/pulseaudio {
+      inherit (pkgs) pulseaudio; };
+
     resource-pooling = callPackage ../development/ocaml-modules/resource-pooling { };
 
     repr = callPackage ../development/ocaml-modules/repr { };
@@ -1070,6 +1103,8 @@ let
     ocb-stubblr = callPackage ../development/ocaml-modules/ocb-stubblr { };
 
     ocurl = callPackage ../development/ocaml-modules/ocurl { };
+
+    opus = callPackage ../development/ocaml-modules/opus { };
 
     pa_ounit = callPackage ../development/ocaml-modules/pa_ounit { };
 
@@ -1167,6 +1202,8 @@ let
 
     safepass = callPackage ../development/ocaml-modules/safepass { };
 
+    samplerate = callPackage ../development/ocaml-modules/samplerate { };
+
     sedlex = callPackage ../development/ocaml-modules/sedlex { };
 
     sedlex_2 = callPackage ../development/ocaml-modules/sedlex/2.nix { };
@@ -1179,9 +1216,16 @@ let
 
     shared-memory-ring-lwt = callPackage ../development/ocaml-modules/shared-memory-ring/lwt.nix { };
 
+    shine = callPackage ../development/ocaml-modules/shine { };
+
     sodium = callPackage ../development/ocaml-modules/sodium { };
 
+    soundtouch = callPackage ../development/ocaml-modules/soundtouch {
+      inherit (pkgs) soundtouch; };
+
     spelll = callPackage ../development/ocaml-modules/spelll { };
+
+    speex = callPackage ../development/ocaml-modules/speex { inherit (pkgs) speex; };
 
     sqlite3EZ = callPackage ../development/ocaml-modules/sqlite3EZ { };
 
@@ -1244,6 +1288,8 @@ let
 
     visitors = callPackage ../development/ocaml-modules/visitors { };
 
+    vorbis = callPackage ../development/ocaml-modules/vorbis { };
+
     wasm = callPackage ../development/ocaml-modules/wasm { };
 
     wayland = callPackage ../development/ocaml-modules/wayland { };
@@ -1271,6 +1317,8 @@ let
     xmlm = callPackage ../development/ocaml-modules/xmlm { };
 
     xml-light = callPackage ../development/ocaml-modules/xml-light { };
+
+    xmlplaylist = callPackage ../development/ocaml-modules/xmlplaylist { };
 
     xtmpl = callPackage ../development/ocaml-modules/xtmpl { };
 
