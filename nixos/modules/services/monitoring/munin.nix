@@ -93,18 +93,13 @@ let
   internManyPlugins = name: path:
     "find '${path}' -type f -perm /a+x -exec cp -a -t . '{}' '+'";
 
-  # Use the appropriate intern-fn to copy the plugins into the store and patch
-  # them afterwards in an attempt to get them to run on NixOS.
+  # Use the appropriate intern-fn to copy the plugins into the store.
   internAndFixPlugins = name: intern-fn: paths:
     pkgs.runCommand name {} ''
       mkdir -p "$out"
       cd "$out"
       ${lib.concatStringsSep "\n"
           (lib.attrsets.mapAttrsToList intern-fn paths)}
-      chmod -R u+w .
-      find . -type f -exec sed -E -i '
-        s,(/usr)?/s?bin/,/run/current-system/sw/bin/,g
-      ' '{}' '+'
     '';
 
   # TODO: write a derivation for munin-contrib, so that for contrib plugins
@@ -184,10 +179,7 @@ in
           Plugins enabled in this manner take precedence over autoconfigured
           plugins.
 
-          Plugins will be copied into the Nix store, and it will attempt to
-          modify them to run properly by fixing hardcoded references to
-          <literal>/bin</literal>, <literal>/usr/bin</literal>,
-          <literal>/sbin</literal>, and <literal>/usr/sbin</literal>.
+          Plugins will be copied into the Nix store.
         '';
         example = literalExample ''
           {
