@@ -11,7 +11,7 @@ stdenv.mkDerivation (attrs // {
 
   configurePhase = if isNull configurePhase then ''
     runHook preConfigure
-    find $NIX_BUILD_TOP -name .attrs.json
+    export NIX_NIM_BUILD_INPUTS=''${pkgsHostTarget[@]} $NIX_NIM_BUILD_INPUTS
     nim_builder --phase:configure
     runHook postConfigure
   '' else
