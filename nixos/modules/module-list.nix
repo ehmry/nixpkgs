@@ -181,6 +181,7 @@
   ./programs/nano.nix
   ./programs/neovim.nix
   ./programs/nm-applet.nix
+  ./programs/nncp.nix
   ./programs/npm.nix
   ./programs/noisetorch.nix
   ./programs/oblogout.nix
