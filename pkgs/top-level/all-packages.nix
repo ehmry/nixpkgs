@@ -29031,6 +29031,8 @@ with pkgs;
 
   sptlrx = callPackage ../applications/audio/sptlrx { };
 
+  squeaker = python3Packages.callPackage ../applications/virtualization/squeaker { };
+
   squishyball = callPackage ../applications/audio/squishyball {
     ncurses = ncurses5;
   };
