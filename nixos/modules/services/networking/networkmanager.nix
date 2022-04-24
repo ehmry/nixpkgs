@@ -528,7 +528,6 @@ in {
           networkmanager-openconnect
           networkmanager-openvpn
           networkmanager-vpnc
-          networkmanager-sstp
         ];
       }
 
