@@ -476,10 +476,6 @@ in {
         group = "nm-openvpn";
         extraGroups = [ "networkmanager" ];
       };
-      nm-iodine = {
-        isSystemUser = true;
-        group = "networkmanager";
-      };
     };
 
     systemd.packages = packages;
@@ -528,7 +524,6 @@ in {
       {
         networkmanager.plugins = with pkgs; [
           networkmanager-fortisslvpn
-          networkmanager-iodine
           networkmanager-l2tp
           networkmanager-openconnect
           networkmanager-openvpn
