@@ -110,7 +110,7 @@ stdenv.mkDerivation rec {
     ++ lib.optional stdenv.hostPlatform.is32bit "-D_FILE_OFFSET_BITS=64"
   );
 
-  doCheck = true;
+  doCheck = !(qtbase != null && stdenv.targetPlatform.isi686);
 
   passthru.tests = {
     python = python3.pkgs.gpgme;
