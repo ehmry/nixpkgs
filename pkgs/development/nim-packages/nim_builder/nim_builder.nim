@@ -90,7 +90,7 @@ proc configurePhase*() =
   var cfg = newFileStream(configFilePath, mode)
   proc switch(key, val: string) =
     cfg.writeLine("switch(", key.escape, ",", val.escape, ")")
-  switch("backend", nf.getNimbleValue("backend", "c"))
+  switch("backend", getEnv("nimBackend", nf.getNimbleValue("backend", "c")))
   switch("nimcache", getEnv("NIX_BUILD_TOP", ".") / "nimcache")
   if getEnvBool("nimRelease", true):
     switch("define", "release")

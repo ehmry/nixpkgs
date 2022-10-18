@@ -76,6 +76,8 @@ buildNimPackage rec {
 All parameters from `stdenv.mkDerivation` function are still supported. The
 following are specific to `buildNimPackage`:
 
+* `nimBackend ? "c"`: Backend build language. This overrides the
+  `backend` option in Nimble files.
 * `nimBinOnly ? false`: If `true` then build only the programs listed in
   the Nimble file in the packages sources.
 * `nimbleFile`: Specify the Nimble file location of the package being built
