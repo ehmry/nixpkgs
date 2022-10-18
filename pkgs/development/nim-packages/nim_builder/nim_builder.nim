@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2021 Nixpkgs/NixOS contributors
 ## Custom Nim builder for Nixpkgs.
 
-import std/[os, osproc, parseutils, sequtils, streams, strutils]
+import std/[json, os, osproc, parseutils, sequtils, streams, strutils]
 
 proc findNimbleFile(): string =
   ## Copied from Nimble.
@@ -94,9 +94,30 @@ proc configurePhase*() =
   switch("nimcache", getEnv("NIX_BUILD_TOP", ".") / "nimcache")
   if getEnvBool("nimRelease", true):
     switch("define", "release")
-  for def in getEnv("nimDefines").split:
-    if def != "":
-      switch("define", def)
+  let defines = parseJson getEnv("nimDefines", "null")
+  case defines.kind
+  of JNull: discard
+  of JObject:
+    for key, val in defines.pairs:
+      case val.kind
+      of JNull:
+        switch("undef", key)
+      of JBool, JInt, JFloat:
+        switch("define", key & "=" & $val)
+      of JString:
+        switch("define", key & "=" & val.str)
+      else:
+        if val.len == 0:
+          switch("define", key)
+        else:
+          quit("invalid $nimDefines value: " & $val)
+  of JArray:
+    for val in defines.elems:
+      if val.kind != JString:
+        quit("invalid $nimDefines value: " & $val)
+      switch("define", val.str)
+  else:
+    quit("invalid $nimDefines: " & $defines)
   for input in getEnv("NIX_NIM_BUILD_INPUTS").split:
     if input != "":
       for nimbleFile in walkFiles(input / "*.nimble"):

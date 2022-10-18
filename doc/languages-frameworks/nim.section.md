@@ -81,11 +81,15 @@ following are specific to `buildNimPackage`:
 * `nimbleFile`: Specify the Nimble file location of the package being built
   rather than discover the file at build-time.
 * `nimRelease ? true`: Build the package in *release* mode.
-* `nimDefines ? []`: A list of Nim defines. Key-value tuples are not supported.
-* `nimFlags ? []`: A list of command line arguments to pass to the Nim compiler.
-  Use this to specify defines with arguments in the form of `-d:${name}=${value}`.
-* `nimDoc` ? false`: Build and install HTML documentation.
+* `nimDefines ? null`: If not `null` then a list or attrset of Nim defines.
+  ```
+  [ "release" "ssl" ] -> --define:release --define:ssl
 
+  { release = null; ssl = []; foo = true; bar = 9; } ->
+    --undef:release --define:ssl --define:foo=true --define:bar=9
+  ```
+* `nimFlags ? []`: A list of command line arguments to pass to the Nim compiler.
+* `nimDoc` ? false`: Build and install HTML documentation.
 * `buildInputs` ? []: The packages listed here will be searched for `*.nimble`
   files which are used to populate the Nim library path. Otherwise the standard
   behavior is in effect.

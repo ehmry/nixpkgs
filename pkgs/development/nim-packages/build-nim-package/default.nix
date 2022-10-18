@@ -2,12 +2,14 @@
 
 { strictDeps ? true, depsBuildBuild ? [ ], nativeBuildInputs ? [ ]
 , configurePhase ? null, buildPhase ? null, checkPhase ? null
-, installPhase ? null, enableParallelBuilding ? true, meta ? { }, ... }@attrs:
+, installPhase ? null, enableParallelBuilding ? true, nimDefines ? null
+, meta ? { }, ... }@attrs:
 
 stdenv.mkDerivation (attrs // {
   inherit strictDeps enableParallelBuilding;
   depsBuildBuild = [ nim_builder ] ++ depsBuildBuild;
   nativeBuildInputs = [ nim ] ++ nativeBuildInputs;
+  nimDefines = builtins.toJSON nimDefines;
 
   configurePhase = if isNull configurePhase then ''
     runHook preConfigure
