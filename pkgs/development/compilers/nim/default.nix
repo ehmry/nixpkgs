@@ -71,6 +71,19 @@ let
 
   nimHost = parsePlatform stdenv.hostPlatform;
   nimTarget = parsePlatform stdenv.targetPlatform;
+
+  bootstrapCompiler = let
+    revision = "561b417c65791cd8356b5f73620914ceff845d10";
+  in stdenv.mkDerivation {
+    pname = "nim-bootstrap";
+    inherit (nim-unwrapped) version src;
+    enableParallelBuilding = true;
+    installPhase = ''
+      runHook preInstall
+      install -Dt $out/bin bin/nim
+      runHook postInstall
+    '';
+  };
 in {
 
   nim-unwrapped = stdenv.mkDerivation rec {
@@ -95,6 +108,7 @@ in {
 
     configurePhase = ''
       runHook preConfigure
+      cp ${bootstrapCompiler}/bin/nim bin/
       echo 'define:nixbuild' >> config/nim.cfg
       runHook postConfigure
     '';
