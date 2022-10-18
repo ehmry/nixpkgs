@@ -177,141 +177,139 @@ in {
     nim' = buildPackages.nim-unwrapped;
     nimble' = buildPackages.nimble-unwrapped;
     inherit (stdenv) targetPlatform;
-    self = stdenv.mkDerivation {
-      name = "${targetPlatform.config}-nim-wrapper-${nim'.version}";
-      inherit (nim') version;
-      preferLocalBuild = true;
-      strictDeps = true;
+  in stdenv.mkDerivation {
+    name = "${targetPlatform.config}-nim-wrapper-${nim'.version}";
+    inherit (nim') version;
+    preferLocalBuild = true;
+    strictDeps = true;
 
-      nativeBuildInputs = [ makeWrapper ];
+    nativeBuildInputs = [ makeWrapper ];
 
-      patches = [
-        ./nim.cfg.patch
-        # Remove configurations that clash with ours
-      ];
+    patches = [
+      ./nim.cfg.patch
+      # Remove configurations that clash with ours
+    ];
 
-      unpackPhase = ''
-        runHook preUnpack
-        tar xf ${nim'.src} nim-$version/config
-        cd nim-$version
-        runHook postUnpack
+    unpackPhase = ''
+      runHook preUnpack
+      tar xf ${nim'.src} nim-$version/config
+      cd nim-$version
+      runHook postUnpack
+    '';
+
+    dontConfigure = true;
+
+    buildPhase =
+      # Configure the Nim compiler to use $CC and $CXX as backends
+      # The compiler is configured by two configuration files, each with
+      # a different DSL. The order of evaluation matters and that order
+      # is not documented, so duplicate the configuration across both files.
+      ''
+        runHook preBuild
+        cat >> config/config.nims << WTF
+
+        switch("os", "${nimTarget.os}")
+        switch("cpu", "${nimTarget.cpu}")
+        switch("define", "nixbuild")
+
+        # Configure the compiler using the $CC set by Nix at build time
+        import strutils
+        let cc = getEnv"CC"
+        if cc.contains("gcc"):
+          switch("cc", "gcc")
+        elif cc.contains("clang"):
+          switch("cc", "clang")
+        WTF
+
+        mv config/nim.cfg config/nim.cfg.old
+        cat > config/nim.cfg << WTF
+        os = "${nimTarget.os}"
+        cpu =  "${nimTarget.cpu}"
+        define:"nixbuild"
+        WTF
+
+        cat >> config/nim.cfg < config/nim.cfg.old
+        rm config/nim.cfg.old
+
+        cat >> config/nim.cfg << WTF
+
+        clang.cpp.exe %= "\$CXX"
+        clang.cpp.linkerexe %= "\$CXX"
+        clang.exe %= "\$CC"
+        clang.linkerexe %= "\$CC"
+        gcc.cpp.exe %= "\$CXX"
+        gcc.cpp.linkerexe %= "\$CXX"
+        gcc.exe %= "\$CC"
+        gcc.linkerexe %= "\$CC"
+        WTF
+
+        runHook postBuild
       '';
 
-      dontConfigure = true;
+    wrapperArgs = [
+      "--prefix PATH : ${lib.makeBinPath [ buildPackages.gdb ]}:${
+        placeholder "out"
+      }/bin"
+      # Used by nim-gdb
 
-      buildPhase =
-        # Configure the Nim compiler to use $CC and $CXX as backends
-        # The compiler is configured by two configuration files, each with
-        # a different DSL. The order of evaluation matters and that order
-        # is not documented, so duplicate the configuration across both files.
-        ''
-          runHook preBuild
-          cat >> config/config.nims << WTF
+      "--prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath [ openssl pcre ]}"
+      # These libraries may be referred to by the standard library.
+      # This is broken for cross-compilation because the package
+      # set will be shifted back by nativeBuildInputs.
 
-          switch("os", "${nimTarget.os}")
-          switch("cpu", "${nimTarget.cpu}")
-          switch("define", "nixbuild")
+      "--set NIM_CONFIG_PATH ${placeholder "out"}/etc/nim"
+      # Use the custom configuration
 
-          # Configure the compiler using the $CC set by Nix at build time
-          import strutils
-          let cc = getEnv"CC"
-          if cc.contains("gcc"):
-            switch("cc", "gcc")
-          elif cc.contains("clang"):
-            switch("cc", "clang")
-          WTF
+      ''--set NIX_HARDENING_ENABLE "''${NIX_HARDENING_ENABLE/fortify}"''
+      # Fortify hardening appends -O2 to gcc flags which is unwanted for unoptimized nim builds.
+    ];
 
-          mv config/nim.cfg config/nim.cfg.old
-          cat > config/nim.cfg << WTF
-          os = "${nimTarget.os}"
-          cpu =  "${nimTarget.cpu}"
-          define:"nixbuild"
-          WTF
+    installPhase = ''
+      runHook preInstall
 
-          cat >> config/nim.cfg < config/nim.cfg.old
-          rm config/nim.cfg.old
+      mkdir -p $out/bin $out/etc
 
-          cat >> config/nim.cfg << WTF
+      cp -r config $out/etc/nim
 
-          clang.cpp.exe %= "\$CXX"
-          clang.cpp.linkerexe %= "\$CXX"
-          clang.exe %= "\$CC"
-          clang.linkerexe %= "\$CC"
-          gcc.cpp.exe %= "\$CXX"
-          gcc.cpp.linkerexe %= "\$CXX"
-          gcc.exe %= "\$CC"
-          gcc.linkerexe %= "\$CC"
-          WTF
-
-          runHook postBuild
-        '';
-
-      wrapperArgs = [
-        "--prefix PATH : ${lib.makeBinPath [ buildPackages.gdb ]}:${
-          placeholder "out"
-        }/bin"
-        # Used by nim-gdb
-
-        "--prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath [ openssl pcre ]}"
-        # These libraries may be referred to by the standard library.
-        # This is broken for cross-compilation because the package
-        # set will be shifted back by nativeBuildInputs.
-
-        "--set NIM_CONFIG_PATH ${placeholder "out"}/etc/nim"
-        # Use the custom configuration
-
-        ''--set NIX_HARDENING_ENABLE "''${NIX_HARDENING_ENABLE/fortify}"''
-        # Fortify hardening appends -O2 to gcc flags which is unwanted for unoptimized nim builds.
-      ];
-
-      installPhase = ''
-        runHook preInstall
-
-        mkdir -p $out/bin $out/etc
-
-        cp -r config $out/etc/nim
-
-        for binpath in ${nim'}/bin/nim?*; do
-          local binname=`basename $binpath`
-          makeWrapper \
-            $binpath $out/bin/${targetPlatform.config}-$binname \
-            $wrapperArgs
-          ln -s $out/bin/${targetPlatform.config}-$binname $out/bin/$binname
-        done
-
+      for binpath in ${nim'}/bin/nim?*; do
+        local binname=`basename $binpath`
         makeWrapper \
-          ${nim'}/nim/bin/nim $out/bin/${targetPlatform.config}-nim \
-          --set-default CC $(command -v $CC) \
-          --set-default CXX $(command -v $CXX) \
+          $binpath $out/bin/${targetPlatform.config}-$binname \
           $wrapperArgs
-        ln -s $out/bin/${targetPlatform.config}-nim $out/bin/nim
+        ln -s $out/bin/${targetPlatform.config}-$binname $out/bin/$binname
+      done
 
-        makeWrapper \
-          ${nim'}/bin/testament $out/bin/${targetPlatform.config}-testament \
-          $wrapperArgs
-        ln -s $out/bin/${targetPlatform.config}-testament $out/bin/testament
+      makeWrapper \
+        ${nim'}/nim/bin/nim $out/bin/${targetPlatform.config}-nim \
+        --set-default CC $(command -v $CC) \
+        --set-default CXX $(command -v $CXX) \
+        $wrapperArgs
+      ln -s $out/bin/${targetPlatform.config}-nim $out/bin/nim
 
-        makeWrapper \
-          ${nimble'}/bin/nimble $out/bin/${targetPlatform.config}-nimble \
-          --suffix PATH : $out/bin
-        ln -s $out/bin/${targetPlatform.config}-nimble $out/bin/nimble
+      makeWrapper \
+        ${nim'}/bin/testament $out/bin/${targetPlatform.config}-testament \
+        $wrapperArgs
+      ln -s $out/bin/${targetPlatform.config}-testament $out/bin/testament
 
-        runHook postInstall
-      '';
+      makeWrapper \
+        ${nimble'}/bin/nimble $out/bin/${targetPlatform.config}-nimble \
+        --suffix PATH : $out/bin
+      ln -s $out/bin/${targetPlatform.config}-nimble $out/bin/nimble
 
-      passthru = {
-        nim = nim';
-        nimble = nimble';
-      };
+      runHook postInstall
+    '';
 
-      meta = nim'.meta // {
-        description = nim'.meta.description
-          + " (${targetPlatform.config} wrapper)";
-        platforms = with lib.platforms; unix ++ genode;
-      };
+    passthru = {
+      nim = nim';
+      nimble = nimble';
+      pkgs = callPackage ../../../top-level/nim-packages.nix { };
     };
-  in self // {
-    pkgs = callPackage ../../../top-level/nim-packages.nix { nim = self; };
+
+    meta = nim'.meta // {
+      description = nim'.meta.description
+        + " (${targetPlatform.config} wrapper)";
+      platforms = with lib.platforms; unix ++ genode;
+    };
   };
 
 }
