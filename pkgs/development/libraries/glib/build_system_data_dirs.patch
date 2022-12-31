@@ -1,0 +1,45 @@
+diff --git a/glib/gutils.c b/glib/gutils.c
+index d73b6474b..f5fa196da 100644
+--- a/glib/gutils.c
++++ b/glib/gutils.c
+@@ -2682,22 +2682,22 @@ g_build_system_data_dirs (void)
+ {
+   gchar **data_dir_vector = NULL;
+   gchar *data_dirs = (gchar *) g_getenv ("XDG_DATA_DIRS");
+-
+-  /* These checks are the same as the ones that g_win32_get_system_data_dirs_for_module()
+-   * does. Please keep them in sync.
+-   */
+-#ifndef G_OS_WIN32
+-  if (!data_dirs || !data_dirs[0])
+-    data_dirs = "/usr/local/share/:/usr/share/";
+-
+-  data_dir_vector = g_strsplit (data_dirs, G_SEARCHPATH_SEPARATOR_S, 0);
+-#else
+-  if (!data_dirs || !data_dirs[0])
+-    data_dir_vector = g_strdupv ((gchar **) g_win32_get_system_data_dirs_for_module_real (NULL));
+-  else
++  gchar *path;
++  gint i;
++
++  if (!data_dirs || !data_dirs[0]) {
++    data_dirs = (gchar *) g_getenv ("NIX_PROFILE");
++    if (data_dirs && data_dirs[0]) {
++      data_dir_vector = g_strsplit (data_dirs, " ", 0);
++      for (i = 0; data_dir_vector[i]; i++) {
++        path = g_build_filename (data_dir_vector[i], "share", NULL);
++        g_free (data_dir_vector[i]);
++        data_dir_vector[i] = path;
++      }
++    }
++  } else {
+     data_dir_vector = g_strsplit (data_dirs, G_SEARCHPATH_SEPARATOR_S, 0);
+-#endif
+-
++  }
+   return g_steal_pointer (&data_dir_vector);
+ }
+
+--
+2.38.1
+

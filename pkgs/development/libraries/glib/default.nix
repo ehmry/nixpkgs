@@ -83,6 +83,7 @@ stdenv.mkDerivation (finalAttrs: {
   ] ++ [
     ./glib-appinfo-watch.patch
     ./schema-override-variable.patch
+    ./build_system_data_dirs.patch
 
     # Add support for the GNOME’s default terminal emulator.
     # https://gitlab.gnome.org/GNOME/glib/-/issues/2618
