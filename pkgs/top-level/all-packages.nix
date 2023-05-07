@@ -11702,6 +11702,8 @@ with pkgs;
 
   retext = qt6Packages.callPackage ../applications/editors/retext { };
 
+  rewise = callPackage ../tools/archivers/rewise { };
+
   rewrk = callPackage ../tools/networking/rewrk { };
 
   inherit (callPackage ../tools/security/rekor { })
