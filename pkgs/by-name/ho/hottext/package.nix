@@ -1,6 +1,6 @@
-{ lib, nim2Packages, fetchFromSourcehut, gentium, makeDesktopItem, nim_lk, SDL2 }:
+{ lib, buildNimPackage, fetchFromSourcehut, gentium, makeDesktopItem }:
 
-nim2Packages.buildNimPackage (finalAttrs: {
+buildNimPackage (finalAttrs: {
   pname = "hottext";
   version = "20231003";
 
