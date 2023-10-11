@@ -1,6 +1,6 @@
-{ lib, buildPackages, nim2Packages, fetchFromSourcehut, openssl }:
+{ lib, buildNimPackage, fetchFromSourcehut, openssl }:
 
-nim2Packages.buildNimPackage (finalAttrs: {
+buildNimPackage (finalAttrs: {
   pname = "nim_lk";
   version = "20231031";
   nimBinOnly = true;
