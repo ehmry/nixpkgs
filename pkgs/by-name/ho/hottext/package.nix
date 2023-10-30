@@ -13,9 +13,7 @@ nim2Packages.buildNimPackage (finalAttrs: {
     hash = "sha256-ncH/1PV4vZY7JCUJ87FPz5bdrQsNlYxzGdc5BQNfQeA=";
   };
 
-  buildInputs = [ SDL2 ];
-
-  nimFlags = nim_lk.passthru.nimFlagsFromLockFile ./lock.json;
+  lockFile = ./lock.json;
 
   HOTTEXT_FONT_PATH = "${gentium}/share/fonts/truetype/GentiumPlus-Regular.ttf";
 

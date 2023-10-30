@@ -1,5 +1,4 @@
-{ lib, stdenv, nim, nim_builder }:
-pkgArgs:
+{ lib, buildPackages, callPackage, stdenv, nim, nim_builder }:
 
 let
   baseAttrs = {
@@ -30,16 +29,58 @@ let
     meta = { inherit (nim.meta) maintainers platforms; };
   };
 
-  inputsOverride =
-    { depsBuildBuild ? [ ], nativeBuildInputs ? [ ], ... }: {
-      depsBuildBuild = [ nim_builder ] ++ depsBuildBuild;
-      nativeBuildInputs = [ nim ] ++ nativeBuildInputs;
+  fodFromLockEntry = let
+    methods = {
+      fetchzip = { url, sha256, ... }:
+        buildPackages.fetchzip {
+          name = "source";
+          inherit url sha256;
+        };
+      git = { fetchSubmodules, leaveDotGit, rev, sha256, url, ... }:
+        buildPackages.fetchgit {
+          inherit fetchSubmodules leaveDotGit rev sha256 url;
+        };
     };
+  in attrs@{ method, ... }:
+  let fod = methods.${method} attrs;
+  in ''--path:"${fod.outPath}/${attrs.srcDir}"'';
 
+  globalAnnotations = callPackage ../../../top-level/nim-annotations.nix { };
+
+  callAnnotations = { packages, ... }@lockAttrs:
+    map (packageName: globalAnnotations.${packageName} or (_: [ ]) lockAttrs)
+    packages;
+
+  asFunc = x: if builtins.isFunction x then x else (_: x);
+
+in buildNimPackageArgs:
+let
   composition = finalAttrs:
     let
-      asFunc = x: if builtins.isFunction x then x else (_: x);
-      prev = baseAttrs // (asFunc ((asFunc pkgArgs) finalAttrs)) baseAttrs;
-    in prev // inputsOverride prev;
+      postPkg = baseAttrs
+        // (asFunc ((asFunc buildNimPackageArgs) finalAttrs)) baseAttrs;
+
+      lockAttrs =
+        lib.attrsets.optionalAttrs (builtins.hasAttr "lockFile" postPkg)
+        (builtins.fromJSON (builtins.readFile postPkg.lockFile));
+
+      lockDepends = lockAttrs.depends or [ ];
+
+      lockFileNimFlags = map fodFromLockEntry lockDepends;
+
+      annotationOverlays = lib.lists.flatten (map callAnnotations lockDepends);
+
+      postLock = builtins.foldl'
+        (prevAttrs: overlay: prevAttrs // (overlay finalAttrs prevAttrs))
+        postPkg annotationOverlays;
+
+      finalOverride = { depsBuildBuild ? [ ], nativeBuildInputs ? [ ], nimFlags ? [ ], ... }:
+        {
+          depsBuildBuild = [ nim_builder ] ++ depsBuildBuild;
+          nativeBuildInputs = [ nim ] ++ nativeBuildInputs;
+          nimFlags = lockFileNimFlags ++ nimFlags;
+        };
+
+    in postLock // finalOverride postLock;
 
 in stdenv.mkDerivation composition
