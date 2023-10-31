@@ -15,8 +15,6 @@ lib.makeScope newScope (self:
 
     atlas = callPackage ../development/nim-packages/atlas { };
 
-    base45 = callPackage ../development/nim-packages/base45 { };
-
     bumpy = callPackage ../development/nim-packages/bumpy { };
 
     chroma = callPackage ../development/nim-packages/chroma { };
