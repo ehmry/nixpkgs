@@ -4774,8 +4774,6 @@ with pkgs;
 
   swaykbdd = callPackage ../tools/wayland/swaykbdd { };
 
-  swaycwd = callPackage ../tools/wayland/swaycwd { };
-
   swayr = callPackage ../tools/wayland/swayr { };
 
   swayrbar = callPackage ../tools/wayland/swayrbar { };
