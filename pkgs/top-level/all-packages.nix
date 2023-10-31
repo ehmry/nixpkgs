@@ -7814,8 +7814,6 @@ with pkgs;
 
   tracy = callPackage ../development/tools/tracy { };
 
-  tridactyl-native = callPackage ../tools/networking/tridactyl-native { };
-
   trivy = callPackage ../tools/admin/trivy { };
 
   trompeloeil = callPackage ../development/libraries/trompeloeil { };
