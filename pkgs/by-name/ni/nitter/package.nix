@@ -5,22 +5,9 @@
 , nixosTests
 , substituteAll
 , unstableGitUpdater
-, flatty
-, jester
-, jsony
-, karax
-, markdown
-, nimcrypto
-, openssl
-, packedjson
-, redis
-, redpool
-, sass
-, supersnappy
-, zippy
 }:
 
-buildNimPackage rec {
+buildNimPackage (finalAttrs: prevAttrs: {
   pname = "nitter";
   version = "unstable-2023-08-08";
 
@@ -31,38 +18,20 @@ buildNimPackage rec {
     hash = "sha256-nlpUzbMkDzDk1n4X+9Wk7+qQk+KOfs5ID6euIfHBoa8=";
   };
 
+  lockFile = ./lock.json;
+
   patches = [
     (substituteAll {
       src = ./nitter-version.patch;
-      inherit version;
-      inherit (src) rev;
-      url = builtins.replaceStrings [ "archive" ".tar.gz" ] [ "commit" "" ] src.url;
+      inherit (finalAttrs) version;
+      inherit (finalAttrs.src) rev;
+      url = builtins.replaceStrings [ "archive" ".tar.gz" ] [ "commit" "" ] finalAttrs.src.url;
     })
   ];
 
-  buildInputs = [
-    flatty
-    jester
-    jsony
-    karax
-    markdown
-    nimcrypto
-    openssl
-    packedjson
-    redis
-    redpool
-    sass
-    supersnappy
-    zippy
-  ];
-
-  nimBinOnly = true;
-
-  nimFlags = [ "--mm:refc" ];
-
   postBuild = ''
-    nim c --hint[Processing]:off -r tools/gencss
-    nim c --hint[Processing]:off -r tools/rendermd
+    nim compile ${toString finalAttrs.nimFlags} -r tools/gencss
+    nim compile ${toString finalAttrs.nimFlags} -r tools/rendermd
   '';
 
   postInstall = ''
@@ -82,4 +51,4 @@ buildNimPackage rec {
     maintainers = with maintainers; [ erdnaxe infinidoge ];
     mainProgram = "nitter";
   };
-}
+})
