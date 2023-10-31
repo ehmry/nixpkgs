@@ -14134,8 +14134,6 @@ with pkgs;
   };
   ttfautohint-nox = ttfautohint.override { enableGUI = false; };
 
-  ttop = callPackage ../tools/system/ttop { };
-
   tty-clock = callPackage ../tools/misc/tty-clock { };
 
   tty-share = callPackage ../applications/misc/tty-share { };

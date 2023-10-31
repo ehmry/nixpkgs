@@ -1,6 +1,6 @@
-{ lib, nimPackages, fetchFromGitHub, testers }:
+{ lib, buildNimPackage, fetchFromGitHub, testers }:
 
-nimPackages.buildNimPackage (finalAttrs: {
+buildNimPackage (finalAttrs: {
   pname = "ttop";
   version = "1.2.6";
   nimBinOnly = true;
@@ -12,7 +12,7 @@ nimPackages.buildNimPackage (finalAttrs: {
     hash = "sha256-rTvEL9MkRJuynu50g8TXitYKnfXsa6PpkfEDaX0nfJs=";
   };
 
-  buildInputs = with nimPackages; [ asciigraph illwill jsony parsetoml zippy ];
+  lockFile = ./lock.json;
 
   nimFlags = [
     "-d:NimblePkgVersion=${finalAttrs.version}"
