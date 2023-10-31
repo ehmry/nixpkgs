@@ -16843,8 +16843,6 @@ with pkgs;
 
   buildNimPackage = callPackage ../development/nim-packages/build-nim-package { };
 
-  nrpl = callPackage ../development/tools/nrpl { };
-
   nimlsp = callPackage ../development/tools/misc/nimlsp { };
 
   neko = callPackage ../development/compilers/neko { };
