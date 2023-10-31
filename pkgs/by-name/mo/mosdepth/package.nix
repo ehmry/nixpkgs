@@ -1,19 +1,22 @@
-{ lib, nimPackages, fetchFromGitHub, docopt, hts, pcre }:
+{ lib, buildNimPackage, fetchFromGitHub, pcre }:
 
-nimPackages.buildNimPackage rec {
+buildNimPackage (finalAttrs: {
   pname = "mosdepth";
   version = "0.3.5";
   nimBinOnly = true;
 
+  requiredNimVersion = 1;
+
   src = fetchFromGitHub {
     owner = "brentp";
     repo = "mosdepth";
-    rev = "v${version}";
+    rev = "v${finalAttrs.version}";
     sha256 = "sha256-tG3J51PS6A0WBCZ+j/Nf7aaukFV+DZJsxpbTbvwu0zc=";
   };
 
-  buildInputs = [ docopt hts pcre ];
-  nimFlags = hts.nimFlags ++ [ "--threads:off" ];
+  lockFile = ./lock.json;
+
+  buildInputs = [ pcre ];
 
   meta = with lib; {
     description = "fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing";
@@ -22,4 +25,4 @@ nimPackages.buildNimPackage rec {
     maintainers = with maintainers; [ jbedo ];
     platforms = platforms.linux;
   };
-}
+})
