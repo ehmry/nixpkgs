@@ -1,4 +1,4 @@
-{ lib, buildPackages, callPackage, stdenv, nim, nim_builder }:
+{ lib, buildPackages, callPackage, stdenv, nim1, nim2 }:
 
 let
   baseAttrs = {
@@ -26,34 +26,37 @@ let
       nim_builder --phase:install
       runHook postInstall
     '';
-    meta = { inherit (nim.meta) maintainers platforms; };
+    meta = { inherit (nim2.meta) maintainers platforms; };
   };
 
-  fodFromLockEntry = let
-    methods = {
-      fetchzip = { url, sha256, ... }:
-        buildPackages.fetchzip {
-          name = "source";
-          inherit url sha256;
-        };
-      git = { fetchSubmodules, leaveDotGit, rev, sha256, url, ... }:
-        buildPackages.fetchgit {
-          inherit fetchSubmodules leaveDotGit rev sha256 url;
-        };
-    };
-  in attrs@{ method, ... }:
-  let fod = methods.${method} attrs;
-  in ''--path:"${fod.outPath}/${attrs.srcDir}"'';
+  fodFromLockEntry =
+    let
+      methods = {
+        fetchzip = { url, sha256, ... }:
+          buildPackages.fetchzip {
+            name = "source";
+            inherit url sha256;
+          };
+        git = { fetchSubmodules, leaveDotGit, rev, sha256, url, ... }:
+          buildPackages.fetchgit {
+            inherit fetchSubmodules leaveDotGit rev sha256 url;
+          };
+      };
+    in
+    attrs@{ method, ... }:
+    let fod = methods.${method} attrs;
+    in ''--path:"${fod.outPath}/${attrs.srcDir}"'';
 
   globalAnnotations = callPackage ../../../top-level/nim-annotations.nix { };
 
   callAnnotations = { packages, ... }@lockAttrs:
     map (packageName: globalAnnotations.${packageName} or (_: [ ]) lockAttrs)
-    packages;
+      packages;
 
   asFunc = x: if builtins.isFunction x then x else (_: x);
 
-in buildNimPackageArgs:
+in
+buildNimPackageArgs:
 let
   composition = finalAttrs:
     let
@@ -62,7 +65,7 @@ let
 
       lockAttrs =
         lib.attrsets.optionalAttrs (builtins.hasAttr "lockFile" postPkg)
-        (builtins.fromJSON (builtins.readFile postPkg.lockFile));
+          (builtins.fromJSON (builtins.readFile postPkg.lockFile));
 
       lockDepends = lockAttrs.depends or [ ];
 
@@ -72,15 +75,30 @@ let
 
       postLock = builtins.foldl'
         (prevAttrs: overlay: prevAttrs // (overlay finalAttrs prevAttrs))
-        postPkg annotationOverlays;
+        postPkg
+        annotationOverlays;
 
-      finalOverride = { depsBuildBuild ? [ ], nativeBuildInputs ? [ ], nimFlags ? [ ], ... }:
-        {
-          depsBuildBuild = [ nim_builder ] ++ depsBuildBuild;
-          nativeBuildInputs = [ nim ] ++ nativeBuildInputs;
+      finalOverride =
+        { depsBuildBuild ? [ ]
+        , nativeBuildInputs ? [ ]
+        , nimFlags ? [ ]
+        , requiredNimVersion ? 2
+        , ...
+        }:
+        (if requiredNimVersion == 1 then {
+          depsBuildBuild = [ nim1.pkgs.nim_builder ] ++ depsBuildBuild;
+          nativeBuildInputs = [ nim1 ] ++ nativeBuildInputs;
+        } else if requiredNimVersion == 2 then {
+          depsBuildBuild = [ nim2.pkgs.nim_builder ] ++ depsBuildBuild;
+          nativeBuildInputs = [ nim2 ] ++ nativeBuildInputs;
+        } else
+          throw "requiredNimVersion ${toString requiredNimVersion} is not valid")
+        // {
           nimFlags = lockFileNimFlags ++ nimFlags;
         };
 
-    in postLock // finalOverride postLock;
+    in
+    postLock // finalOverride postLock;
 
-in stdenv.mkDerivation composition
+in
+stdenv.mkDerivation composition
