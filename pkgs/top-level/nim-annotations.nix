@@ -1,4 +1,4 @@
-{ lib, libsass, openssl, SDL2 }:
+{ lib, libsass, libX11, libXft, libXinerama, openssl, SDL2 }:
 
 # The following is list of overrides that take three arguments each:
 # - lockAttrs: - an attrset from a Nim lockfile, use this for making constraints on the locked library
@@ -19,6 +19,11 @@
   sdl2 = lockAttrs: finalAttrs:
     { buildInputs ? [ ], ... }: {
       buildInputs = buildInputs ++ [ SDL2 ];
+    };
+
+  x11 = lockAttrs: finalAttrs:
+    { buildInputs ? [ ], ... }: {
+      buildInputs = buildInputs ++ [ libX11 libXft libXinerama ];
     };
 
   zippy = lockAttrs: finalAttrs:
