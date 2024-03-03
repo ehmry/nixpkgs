@@ -10656,8 +10656,6 @@ with pkgs;
 
   lzham = callPackage ../tools/compression/lzham { };
 
-  lzip = callPackage ../tools/compression/lzip { };
-
   lziprecover = callPackage ../tools/compression/lziprecover { };
 
   xz = callPackage ../tools/compression/xz { };
