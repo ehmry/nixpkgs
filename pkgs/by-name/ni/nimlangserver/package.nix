@@ -3,7 +3,7 @@
   buildNimPackage,
   fetchFromGitHub,
 }:
-buildNimPackage (final: prev: {
+buildNimPackage (finalAttrs: {
   pname = "nimlangserver";
   version = "1.2.0";
 
@@ -20,7 +20,7 @@ buildNimPackage (final: prev: {
   doCheck = false;
 
   meta = with lib;
-    final.src.meta
+    finalAttrs.src.meta
     // {
       description = "The Nim language server implementation (based on nimsuggest)";
       homepage = "https://github.com/nim-lang/langserver";

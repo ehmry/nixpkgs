@@ -1,6 +1,6 @@
 { lib, buildNimPackage, fetchFromGitea }:
 
-buildNimPackage (final: prev: {
+buildNimPackage (finalAttrs: {
   pname = "eris";
   version = "20230722";
   outputs = [ "bin" "out" ];
@@ -9,7 +9,7 @@ buildNimPackage (final: prev: {
     domain = "codeberg.org";
     owner = "eris";
     repo = "nim-eris";
-    rev = final.version;
+    rev = finalAttrs.version;
     hash = "sha256-JVl2/PmFVYuD4s9hKoQwVDKUa3PBWK5SBDEmVHVSuig=";
   };
   lockFile = ./lock.json;
@@ -24,7 +24,7 @@ buildNimPackage (final: prev: {
     install -D "eris-link.xml" -t "$bin/share/mime/packages"
     install -D "eris48.png" "$bin/share/icons/hicolor/48x48/apps/eris.png"
   '';
-  meta = final.src.meta // {
+  meta = finalAttrs.src.meta // {
     homepage = "https://codeberg.org/eris/nim-eris";
     license = lib.licenses.unlicense;
     maintainers = with lib.maintainers; [ ehmry ];

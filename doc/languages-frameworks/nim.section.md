@@ -50,19 +50,6 @@ $ nix build -f . ttop.src
 $ nix run -f . nim_lk ./result | jq --sort-keys > pkgs/by-name/tt/ttop/lock.json
 ```
 
-## Overriding Nim packages {#nim-overrides}
-
-The `buildNimPackage` function generates flags and additional build dependencies from the `lockFile` parameter passed to `buildNimPackage`. Using [`overrideAttrs`](#sec-pkg-overrideAttrs) on the final package will apply after this has already been generated, so this can't be used to override the `lockFile` in a package built with `buildNimPackage`. To be able to override parameters before flags and build dependencies are generated from the `lockFile`, use `overrideNimAttrs` instead with the same syntax as `overrideAttrs`:
-
-```nix
-pkgs.nitter.overrideNimAttrs {
-  # using a different source which has different dependencies from the standard package
-  src = pkgs.fetchFromGithub { /* … */ };
-  # new lock file generated from the source
-  lockFile = ./custom-lock.json;
-}
-```
-
 ## Lockfile dependency overrides {#nim-lock-overrides}
 
 The `buildNimPackage` function matches the libraries specified by `lockFile` to attrset of override functions that are then applied to the package derivation.
@@ -90,7 +77,6 @@ For example, to propagate a dependency on SDL2 for lockfiles that select the Nim
 
 The annotations in the `nim-overrides.nix` set are functions that take two arguments and return a new attrset to be overlayed on the package being built.
 - lockAttrs: the attrset for this library from within a lockfile. This can be used to implement library version constraints, such as marking libraries as broken or insecure.
-- prevAttrs: the attrset produced by initial arguments to `buildNimPackage` and any preceding lockfile overlays.
 
 ### Overriding an Nim library override {#nim-lock-overrides-overrides}
 

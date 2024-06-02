@@ -1,6 +1,6 @@
 { lib, buildNimPackage, fetchFromGitHub, openssl }:
 
-buildNimPackage (final: prev: {
+buildNimPackage (finalAttrs: {
   pname = "atlas";
   version = "unstable-2023-09-22";
   src = fetchFromGitHub {
@@ -14,7 +14,7 @@ buildNimPackage (final: prev: {
     rm config.nims
   ''; # never trust a .nims file
   doCheck = false; # tests will clone repos
-  meta = final.src.meta // {
+  meta = finalAttrs.src.meta // {
     description = "Nim package cloner";
     mainProgram = "atlas";
     license = [ lib.licenses.mit ];

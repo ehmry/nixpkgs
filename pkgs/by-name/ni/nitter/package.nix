@@ -6,7 +6,7 @@
 , unstableGitUpdater
 }:
 
-buildNimPackage (finalAttrs: prevAttrs: {
+buildNimPackage (finalAttrs: {
   pname = "nitter";
   version = "0-unstable-2024-02-26";
 
