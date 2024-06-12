@@ -1,6 +1,6 @@
 # This module creates a bootable SD card image containing the given NixOS
 # configuration. The generated image is MBR partitioned, with a FAT
-# /boot/firmware partition, and ext4 root partition. The generated image
+# /boot/firmware partition, and f2fs root partition. The generated image
 # is sized to fit its contents, and a boot script automatically resizes
 # the root partition to fit the device on the first boot.
 #
@@ -16,7 +16,7 @@
 with lib;
 
 let
-  rootfsImage = pkgs.callPackage ../../../lib/make-ext4-fs.nix ({
+  rootfsImage = pkgs.callPackage ../../../lib/make-f2fs-fs.nix ({
     inherit (config.sdImage) storePaths;
     compressImage = config.sdImage.compressImage;
     populateImageCommands = config.sdImage.populateRootCommands;
@@ -28,7 +28,7 @@ in
 {
   imports = [
     (mkRemovedOptionModule [ "sdImage" "bootPartitionID" ] "The FAT partition for SD image now only holds the Raspberry Pi firmware files. Use firmwarePartitionID to configure that partition's ID.")
-    (mkRemovedOptionModule [ "sdImage" "bootSize" ] "The boot files for SD image have been moved to the main ext4 partition. The FAT partition now only holds the Raspberry Pi firmware files. Changing its size may not be required.")
+    (mkRemovedOptionModule [ "sdImage" "bootSize" ] "The boot files for SD image have been moved to the main f2fs partition. The FAT partition now only holds the Raspberry Pi firmware files. Changing its size may not be required.")
     ../../profiles/all-hardware.nix
   ];
 
@@ -164,7 +164,7 @@ in
       };
       "/" = {
         device = "/dev/disk/by-label/NIXOS_SD";
-        fsType = "ext4";
+        fsType = "f2fs";
       };
     };
 
